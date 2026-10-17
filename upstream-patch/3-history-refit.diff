@@ -1,0 +1,96 @@
+diff --git a/progress_model/_impl.py b/progress_model/_impl.py
+index 479b617..7f6ecc8 100644
+--- a/progress_model/_impl.py
++++ b/progress_model/_impl.py
+@@ -1167,6 +1167,7 @@ class ProgressModel:
+         _timing_wall: Dict[str, float] = {}
+         _timing_cpu: Dict[str, float] = {}
+         _timing_meta: Dict[str, Any] = {}
++        self.params.forward_labor_reference = None
+         # first, compute exp capacity params from asymptotes and anchors
+         if not self.params.direct_input_exp_cap_ces_params:
+             # Use present_day for reference instead of fixed REFERENCE_YEAR (2024.8)
+@@ -1181,7 +1182,7 @@ class ProgressModel:
+                 (cfg.REFERENCE_COMPUTE_CHANGE, self.params.compute_anchor_exp_cap),
+                 (cfg.REFERENCE_LABOR_CHANGE, self.params.labor_anchor_exp_cap),
+                 ref_exp_compute, ref_coding_labor,
+-                self.params.parallel_penalty
++                self.params.calibration_parallel_penalty
+             )
+             self.params.rho_experiment_capacity = rho
+             self.params.alpha_experiment_capacity = alpha_experiment_capacity
+@@ -1472,6 +1473,8 @@ class ProgressModel:
+         # Use utility function to compute initial conditions with the correct parameters
+         _t0 = time.perf_counter()
+         _c0 = time.process_time()
++        self.params.forward_labor_reference = self.params.automation_model.coding_labor_optimal_ces(present_day_human_labor,
++            present_day_inference_compute, np.log(cfg.BASE_FOR_SOFTWARE_LOM) * present_day_progress, self.params)
+         initial_conditions = compute_initial_conditions(self.data, self.params, initial_progress)
+         _timing_wall['initial_conditions'] = time.perf_counter() - _t0
+         _timing_cpu['initial_conditions'] = time.process_time() - _c0
+diff --git a/progress_model/integration.py b/progress_model/integration.py
+index b890799..3e1bb84 100644
+--- a/progress_model/integration.py
++++ b/progress_model/integration.py
+@@ -140,7 +140,7 @@ def calculate_initial_research_stock(time_series_data: TimeSeriesData, params: P
+         L_HUMAN_0 = _log_interp(start_time, time_series_data.time, time_series_data.L_HUMAN)
+         experiment_compute_0 = _log_interp(start_time, time_series_data.time, time_series_data.experiment_H100e)
+         initial_aggregate_research_taste = 1
+-        coding_labor_0 = L_HUMAN_0 ** params.parallel_penalty
++        coding_labor_0 = L_HUMAN_0 ** params.calibration_parallel_penalty
+         # Calculate RS'(0)
+         rs_rate_0 = compute_research_effort(
+             experiment_compute_0, coding_labor_0,
+@@ -153,7 +153,7 @@ def calculate_initial_research_stock(time_series_data: TimeSeriesData, params: P
+         experiment_compute_dt = _log_interp(start_time + dt, time_series_data.time, time_series_data.experiment_H100e)
+ 
+         # Automation fraction changes very little over small dt, so use same value
+-        coding_labor_dt = L_HUMAN_dt ** params.parallel_penalty
++        coding_labor_dt = L_HUMAN_dt ** params.calibration_parallel_penalty
+ 
+         rs_rate_dt = compute_research_effort(
+             experiment_compute_dt, coding_labor_dt,
+@@ -220,7 +220,7 @@ def compute_initial_conditions(time_series_data: TimeSeriesData, params: Paramet
+         initial_automation = 1.0
+         initial_ai_research_taste = 0.0
+         initial_aggregate_research_taste = 1.0
+-        coding_labor = compute_coding_labor_deprecated(None, inference_H100e, L_HUMAN, params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization, human_only=True)
++        coding_labor = compute_coding_labor_deprecated(None, inference_H100e, L_HUMAN, params.rho_coding_labor, params.calibration_parallel_penalty, params.coding_labor_normalization, human_only=True)
+         research_effort = compute_research_effort(experiment_H100e, coding_labor, params.alpha_experiment_capacity, params.rho_experiment_capacity, params.experiment_compute_exponent, initial_aggregate_research_taste)
+     else:
+         initial_automation = compute_automation_fraction(initial_progress, params)
+@@ -228,7 +228,7 @@ def compute_initial_conditions(time_series_data: TimeSeriesData, params: Paramet
+         initial_aggregate_research_taste = compute_aggregate_research_taste(initial_ai_research_taste, params.taste_distribution)
+         coding_labor = compute_coding_labor_deprecated(
+             initial_automation, inference_H100e, L_HUMAN,
+-            params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization
++            params.rho_coding_labor, params.calibration_parallel_penalty, params.coding_labor_normalization
+         )
+ 
+         research_effort = compute_research_effort(
+@@ -344,7 +344,7 @@ def integrate_progress_human_only(
+         experiment_compute_fine = np.interp(internal_times, data.time, data.experiment_H100e)
+ 
+     # ========== STEP 2: Compute coding labor (vectorized) ==========
+-    serial_coding_labor_fine = np.power(L_HUMAN_fine, params.parallel_penalty) * params.coding_labor_normalization
++    serial_coding_labor_fine = np.power(L_HUMAN_fine, params.calibration_parallel_penalty) * params.coding_labor_normalization
+     if serial_labor_multiplier_fn is not None:
+         serial_coding_labor_fine = serial_coding_labor_fine * np.asarray(
+             serial_labor_multiplier_fn(internal_times), dtype=float)
+diff --git a/progress_model/progress_rate.py b/progress_model/progress_rate.py
+index d6dfedf..53ba49a 100644
+--- a/progress_model/progress_rate.py
++++ b/progress_model/progress_rate.py
+@@ -396,7 +396,11 @@ def progress_rate_at_time(t: float, state: List[float], time_series_data: TimeSe
+                     automation_model = params.automation_model
+                     L_opt = automation_model.coding_labor_optimal_ces(H, C, lnE, params)
+                     # Match units with compute_coding_labor_deprecated: apply parallel_penalty and normalization
+-                    coding_labor = float((L_opt ** params.parallel_penalty) * params.coding_labor_normalization)
++                    x0 = getattr(params, 'forward_labor_reference', None)  # parallel coding labor at present day
++                    if x0 is not None and t >= params.present_day:  # the forward lambda applies to growth after today
++                        L_opt = x0 * (L_opt / x0) ** (params.parallel_penalty / params.calibration_parallel_penalty)
++                    pp = params.parallel_penalty if x0 is None else params.calibration_parallel_penalty
++                    coding_labor = float((L_opt ** pp) * params.coding_labor_normalization)
+                 except Exception as e:
+                     if should_reraise(e):
+                         raise

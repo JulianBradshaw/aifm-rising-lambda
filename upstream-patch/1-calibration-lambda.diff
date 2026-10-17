@@ -1,0 +1,12 @@
+diff --git a/progress_model/parameters.py b/progress_model/parameters.py
+index ffe539e..c7c1c0d 100644
+--- a/progress_model/parameters.py
++++ b/progress_model/parameters.py
+@@ -112,6 +112,7 @@ class Parameters:
+     inv_compute_anchor_exp_cap: float = field(default_factory=lambda: cfg.DEFAULT_PARAMETERS['inv_compute_anchor_exp_cap'])
+     # penalty on parallel coding labor in exp capacity CES
+     parallel_penalty: float = field(default_factory=lambda: cfg.DEFAULT_PARAMETERS['parallel_penalty'])
++    calibration_parallel_penalty: float = 0.5  # lambda for historical labor and the uplift backcalculation
+ 
+     # Research taste distribution parameter
+     median_to_top_taste_multiplier: float = field(default_factory=lambda: cfg.DEFAULT_PARAMETERS['median_to_top_taste_multiplier'])
