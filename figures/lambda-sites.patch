@@ -1,0 +1,483 @@
+diff -ruN -x __pycache__ a/progress_model/_impl.py b/progress_model/_impl.py
+--- a/progress_model/_impl.py	2026-10-11 00:45:36.696520588 +0000
++++ b/progress_model/_impl.py	2026-10-11 00:55:33.442863592 +0000
+@@ -9,6 +9,7 @@
+ progress_model package instead of this module directly.
+ """
+ 
++from .lamsite import lam as _lam
+ import numpy as np
+ from dataclasses import dataclass, field
+ from typing import List, Tuple, Optional, Dict, Any, Union, NamedTuple
+@@ -257,7 +258,7 @@
+ 
+         # Determine which metric and target we need
+         if milestone == 'AI2027-SC':
+-            target = (30 ** (1 / self.params.parallel_penalty)) * 30 * cfg.PARALLEL_LABOR_MULT_BETWEEN_AVERAGE_AND_TOP_FOR_AI2027_SC
++            target = (30 ** (1 / _lam('metrics', self.params.parallel_penalty))) * 30 * cfg.PARALLEL_LABOR_MULT_BETWEEN_AVERAGE_AND_TOP_FOR_AI2027_SC
+             metric_name = 'ai_coding_labor_mult_ref_present_day'
+         elif milestone.startswith('AIR-'):
+             # Extract multiplier from milestone name (e.g., 'AIR-5x' -> 5)
+@@ -291,17 +292,17 @@
+                 coding_labor_with_present_resources = automation_model.coding_labor_optimal_ces(
+                     present_day_human_labor, present_day_inference_compute, lnE, self.params
+                 )
+-                serial_coding_labor = float((coding_labor ** self.params.parallel_penalty) * self.params.coding_labor_normalization)
+-                serial_coding_labor_with_present_resources = float((coding_labor_with_present_resources ** self.params.parallel_penalty) * self.params.coding_labor_normalization)
++                serial_coding_labor = float((coding_labor ** _lam('metrics', self.params.parallel_penalty)) * self.params.coding_labor_normalization)
++                serial_coding_labor_with_present_resources = float((coding_labor_with_present_resources ** _lam('metrics', self.params.parallel_penalty)) * self.params.coding_labor_normalization)
+             else:
+                 automation_fraction = compute_automation_fraction(progress, self.params)
+                 serial_coding_labor = compute_coding_labor_deprecated(
+                     automation_fraction, inference_H100e, L_HUMAN,
+-                    self.params.rho_coding_labor, self.params.parallel_penalty, self.params.coding_labor_normalization
++                    self.params.rho_coding_labor, _lam('metrics', self.params.parallel_penalty), self.params.coding_labor_normalization
+                 )
+                 serial_coding_labor_with_present_resources = compute_coding_labor_deprecated(
+                     automation_fraction, present_day_inference_compute, present_day_human_labor,
+-                    self.params.rho_coding_labor, self.params.parallel_penalty, self.params.coding_labor_normalization
++                    self.params.rho_coding_labor, _lam('metrics', self.params.parallel_penalty), self.params.coding_labor_normalization
+                 )
+                 coding_labor_with_present_resources = serial_coding_labor_with_present_resources
+ 
+@@ -1181,7 +1182,7 @@
+                 (cfg.REFERENCE_COMPUTE_CHANGE, self.params.compute_anchor_exp_cap),
+                 (cfg.REFERENCE_LABOR_CHANGE, self.params.labor_anchor_exp_cap),
+                 ref_exp_compute, ref_coding_labor,
+-                self.params.parallel_penalty
++                _lam('expcap', self.params.parallel_penalty)
+             )
+             self.params.rho_experiment_capacity = rho
+             self.params.alpha_experiment_capacity = alpha_experiment_capacity
+@@ -1688,7 +1689,7 @@
+         # using exponential (log-space) interpolation between adjacent samples.
+         ai2027_sc_time = None
+         try:
+-            ai2027_sc_required_mult = (30 ** (1 / self.params.parallel_penalty)) * 30 * cfg.PARALLEL_LABOR_MULT_BETWEEN_AVERAGE_AND_TOP_FOR_AI2027_SC
++            ai2027_sc_required_mult = (30 ** (1 / _lam('metrics', self.params.parallel_penalty))) * 30 * cfg.PARALLEL_LABOR_MULT_BETWEEN_AVERAGE_AND_TOP_FOR_AI2027_SC
+             ai2027_sc_time = _find_exponential_crossing_time(
+                 np.asarray(times, dtype=float),
+                 np.asarray(ai_coding_labor_mult_ref_present_day, dtype=float),
+@@ -2043,7 +2044,7 @@
+                 'interpolation_type': 'linear',            },
+             'AI2027-SC': {
+                 'metric': 'ai_coding_labor_mult_ref_present_day',
+-                'target': (30 ** (1 / self.params.parallel_penalty)) * 30 * cfg.PARALLEL_LABOR_MULT_BETWEEN_AVERAGE_AND_TOP_FOR_AI2027_SC,
++                'target': (30 ** (1 / _lam('metrics', self.params.parallel_penalty))) * 30 * cfg.PARALLEL_LABOR_MULT_BETWEEN_AVERAGE_AND_TOP_FOR_AI2027_SC,
+                 'interpolation_type': 'exponential',
+             },
+             'AIR-5x': {
+diff -ruN -x __pycache__ a/progress_model/automation_model.py b/progress_model/automation_model.py
+--- a/progress_model/automation_model.py	2026-10-11 00:45:36.696520588 +0000
++++ b/progress_model/automation_model.py	2026-10-11 00:55:33.444122828 +0000
+@@ -6,6 +6,7 @@
+ and optimal CES frontier calculations.
+ """
+ 
++from .lamsite import lam as _lam
+ import numpy as np
+ import time
+ from typing import Optional, Dict, Any, Tuple, NamedTuple, TYPE_CHECKING
+@@ -723,7 +724,7 @@
+         return 0.0
+ 
+     # Target value we want to achieve
+-    target_output = swe_multiplier**params.parallel_penalty * compute_coding_labor_deprecated(0, inference_H100e, L_HUMAN, params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization, human_only=True)
++    target_output = swe_multiplier**_lam('anchor', params.parallel_penalty) * compute_coding_labor_deprecated(0, inference_H100e, L_HUMAN, params.rho_coding_labor, _lam('anchor', params.parallel_penalty), params.coding_labor_normalization, human_only=True)
+ 
+     # Define the objective function to minimize
+     def objective(A_candidate):
+@@ -731,7 +732,7 @@
+         try:
+             actual_output = compute_coding_labor_deprecated(
+                 A_candidate, inference_H100e, L_HUMAN,
+-                params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization
++                params.rho_coding_labor, _lam('anchor', params.parallel_penalty), params.coding_labor_normalization
+             )
+             return actual_output - target_output
+         except Exception as e:
+@@ -782,7 +783,7 @@
+             try:
+                 actual_outputs = compute_coding_labor_deprecated(
+                     A_candidates, inference_H100e, L_HUMAN,
+-                    params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization
++                    params.rho_coding_labor, _lam('anchor', params.parallel_penalty), params.coding_labor_normalization
+                 )
+                 errors = np.abs(actual_outputs - target_output)
+             except Exception as vec_e:
+@@ -855,12 +856,12 @@
+             return aut_frac_from_swe_multiplier(swe_multiplier, L_HUMAN, inference_H100e, params)
+ 
+         # Target coding-labor ratio in parallel_penalty space
+-        target_ratio = float(np.power(swe_multiplier, params.parallel_penalty))
++        target_ratio = float(np.power(swe_multiplier, _lam('anchor', params.parallel_penalty)))
+ 
+         # Baseline human-only coding labor (consistent with definition of multiplier)
+         baseline = compute_coding_labor_deprecated(
+             0, inference_H100e, L_HUMAN,
+-            params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization,
++            params.rho_coding_labor, _lam('anchor', params.parallel_penalty), params.coding_labor_normalization,
+             human_only=True
+         )
+         if baseline <= 0 or not np.isfinite(baseline):
+@@ -903,11 +904,11 @@
+                     A = am.get_automation_fraction(anchor_progress)
+                     L_ai = compute_coding_labor_deprecated(
+                         A, inference_H100e, L_HUMAN,
+-                        params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization
++                        params.rho_coding_labor, _lam('anchor', params.parallel_penalty), params.coding_labor_normalization
+                     )
+                 else:
+                     # Match units with compute_coding_labor_deprecated
+-                    L_ai = float((L_opt ** params.parallel_penalty) * params.coding_labor_normalization)
++                    L_ai = float((L_opt ** _lam('anchor', params.parallel_penalty)) * params.coding_labor_normalization)
+                 if not np.isfinite(L_ai) or L_ai <= 0:
+                     _prof_implied_ratio_time += time.perf_counter() - _prof_call_start
+                     return 0.0
+@@ -1057,7 +1058,7 @@
+     if baseline is None:
+         baseline = float(compute_coding_labor_deprecated(
+             0, C, H,
+-            params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization,
++            params.rho_coding_labor, _lam('anchor', params.parallel_penalty), params.coding_labor_normalization,
+             human_only=True
+         ))
+     if not (np.isfinite(baseline) and baseline > 0):
+@@ -1091,7 +1092,7 @@
+     if baseline is None:
+         baseline = float(compute_coding_labor_deprecated(
+             0, C, H,
+-            params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization,
++            params.rho_coding_labor, _lam('anchor', params.parallel_penalty), params.coding_labor_normalization,
+             human_only=True
+         ))
+     if not (np.isfinite(baseline) and baseline > 0):
+@@ -1110,7 +1111,7 @@
+         usable = np.isfinite(L_opt)
+         L_ai = np.empty(progress_arr.shape, dtype=float)
+         L_ai[usable] = (
+-            np.power(L_opt[usable], params.parallel_penalty) * params.coding_labor_normalization
++            np.power(L_opt[usable], _lam('anchor', params.parallel_penalty)) * params.coding_labor_normalization
+         )
+ 
+     if not np.all(usable):
+@@ -1118,7 +1119,7 @@
+         A_fallback = np.atleast_1d(am.get_automation_fraction(progress_arr[~usable]))
+         L_ai[~usable] = np.atleast_1d(compute_coding_labor_deprecated(
+             A_fallback, C, H,
+-            params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization
++            params.rho_coding_labor, _lam('anchor', params.parallel_penalty), params.coding_labor_normalization
+         ))
+ 
+     return L_ai / baseline
+@@ -1143,7 +1144,7 @@
+         k      = A'(p*) / (A* (1 - A*/L))      (logistic slope identity)
+         x0     = p* + ln(L/A* - 1) / k
+     """
+-    parallel_penalty = float(params.parallel_penalty)
++    parallel_penalty = float(_lam('anchor', params.parallel_penalty))
+     swe_multiplier_guess = float(target_serial_uplift) ** (1.0 / parallel_penalty)
+     A_star = float(aut_frac_from_swe_multiplier(swe_multiplier_guess, H, C, params))
+     A_star = float(np.clip(
+@@ -1155,7 +1156,7 @@
+     def simple_multiplier(A):
+         return float(compute_coding_labor_deprecated(
+             A, C, H,
+-            params.rho_coding_labor, parallel_penalty, params.coding_labor_normalization
++            params.rho_coding_labor, _lam('anchor', parallel_penalty), params.coding_labor_normalization
+         )) / baseline
+ 
+     h = min(1e-5, 0.5 * A_star, 0.5 * (1.0 - A_star))
+@@ -1373,7 +1374,7 @@
+ 
+     baseline = float(compute_coding_labor_deprecated(
+         0, C, H,
+-        params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization,
++        params.rho_coding_labor, _lam('anchor', params.parallel_penalty), params.coding_labor_normalization,
+         human_only=True
+     ))
+     if not (np.isfinite(baseline) and baseline > 0):
+diff -ruN -x __pycache__ a/progress_model/integration.py b/progress_model/integration.py
+--- a/progress_model/integration.py	2026-10-11 00:45:36.696520588 +0000
++++ b/progress_model/integration.py	2026-10-11 00:55:47.924759514 +0000
+@@ -6,6 +6,7 @@
+ equations, including initial condition computation and the main ODE solver.
+ """
+ 
++from .lamsite import lam as _lam, serial as _serial
+ import numpy as np
+ from scipy import integrate
+ import time
+@@ -140,7 +141,7 @@
+         L_HUMAN_0 = _log_interp(start_time, time_series_data.time, time_series_data.L_HUMAN)
+         experiment_compute_0 = _log_interp(start_time, time_series_data.time, time_series_data.experiment_H100e)
+         initial_aggregate_research_taste = 1
+-        coding_labor_0 = L_HUMAN_0 ** params.parallel_penalty
++        coding_labor_0 = _serial(L_HUMAN_0, start_time, params.parallel_penalty, 1.0, True)
+         # Calculate RS'(0)
+         rs_rate_0 = compute_research_effort(
+             experiment_compute_0, coding_labor_0,
+@@ -153,7 +154,7 @@
+         experiment_compute_dt = _log_interp(start_time + dt, time_series_data.time, time_series_data.experiment_H100e)
+ 
+         # Automation fraction changes very little over small dt, so use same value
+-        coding_labor_dt = L_HUMAN_dt ** params.parallel_penalty
++        coding_labor_dt = _serial(L_HUMAN_dt, start_time + dt, params.parallel_penalty, 1.0, True)
+ 
+         rs_rate_dt = compute_research_effort(
+             experiment_compute_dt, coding_labor_dt,
+@@ -220,16 +221,16 @@
+         initial_automation = 1.0
+         initial_ai_research_taste = 0.0
+         initial_aggregate_research_taste = 1.0
+-        coding_labor = compute_coding_labor_deprecated(None, inference_H100e, L_HUMAN, params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization, human_only=True)
++        coding_labor = _serial(L_HUMAN, start_time, params.parallel_penalty, params.coding_labor_normalization, True)
+         research_effort = compute_research_effort(experiment_H100e, coding_labor, params.alpha_experiment_capacity, params.rho_experiment_capacity, params.experiment_compute_exponent, initial_aggregate_research_taste)
+     else:
+         initial_automation = compute_automation_fraction(initial_progress, params)
+         initial_ai_research_taste = compute_ai_research_taste(initial_progress, params)
+         initial_aggregate_research_taste = compute_aggregate_research_taste(initial_ai_research_taste, params.taste_distribution)
+-        coding_labor = compute_coding_labor_deprecated(
++        coding_labor = _serial(compute_coding_labor_deprecated(
+             initial_automation, inference_H100e, L_HUMAN,
+-            params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization
+-        )
++            params.rho_coding_labor, 1.0, 1.0
++        ), start_time, params.parallel_penalty, params.coding_labor_normalization, False)
+ 
+         research_effort = compute_research_effort(
+             experiment_H100e, coding_labor,
+@@ -344,7 +345,7 @@
+         experiment_compute_fine = np.interp(internal_times, data.time, data.experiment_H100e)
+ 
+     # ========== STEP 2: Compute coding labor (vectorized) ==========
+-    serial_coding_labor_fine = np.power(L_HUMAN_fine, params.parallel_penalty) * params.coding_labor_normalization
++    serial_coding_labor_fine = _serial(L_HUMAN_fine, internal_times, params.parallel_penalty, params.coding_labor_normalization, True)
+     if serial_labor_multiplier_fn is not None:
+         serial_coding_labor_fine = serial_coding_labor_fine * np.asarray(
+             serial_labor_multiplier_fn(internal_times), dtype=float)
+diff -ruN -x __pycache__ a/progress_model/lamsite.py b/progress_model/lamsite.py
+--- a/progress_model/lamsite.py	1970-01-01 00:00:00.000000000 +0000
++++ b/progress_model/lamsite.py	2026-10-11 00:56:11.722598584 +0000
+@@ -0,0 +1,32 @@
++import os, json
++_cache = [None, {}]
++def lam(site, base):
++    s = os.environ.get('LAM_SITES', '')
++    if s != _cache[0]:
++        _cache[0] = s; _cache[1] = json.loads(s) if s else {}
++    return _cache[1].get(site, base)
++
++import numpy as _np
++def serial(X, t, base, cn, human):
++    """Parallel labor X -> serial labor. With no history/dynamics override this is the
++    model's own X**base * cn. With an override, levels are pinned at today's values and
++    only the elasticity changes: lambda_history before present day, lambda_dynamics after."""
++    lam('', 0)
++    ov = _cache[1]
++    if 'history' not in ov and 'dynamics' not in ov:
++        return _np.power(X, base) * cn
++    H0 = float(os.environ['LAM_H0']); PD = float(os.environ['LAM_PD'])
++    lh = ov.get('history', base); ld = ov.get('dynamics', base)
++    xr = H0 if human else float(os.environ.get('LAM_XREF', H0))
++    Xa = _np.asarray(X, float); ta = _np.asarray(t, float)
++    past = H0**base * (Xa/H0)**lh
++    fut = H0**base * (xr/H0)**lh * (Xa/xr)**ld
++    out = _np.where(ta < PD, past, fut) * cn
++    return float(out) if out.ndim == 0 else out
++
++_rec = []
++_serial_inner = serial
++def serial(X, t, base, cn, human):
++    if not human and os.environ.get('LAM_RECORD') and _np.ndim(t) == 0 and abs(float(t) - float(os.environ['LAM_PD'])) < 0.01:
++        _rec.append((float(t), float(X)))
++    return _serial_inner(X, t, base, cn, human)
+diff -ruN -x __pycache__ a/progress_model/metrics_computation.py b/progress_model/metrics_computation.py
+--- a/progress_model/metrics_computation.py	2026-10-11 00:45:36.696520588 +0000
++++ b/progress_model/metrics_computation.py	2026-10-11 00:55:33.443081854 +0000
+@@ -6,6 +6,7 @@
+ This module was extracted from _impl.py to improve modularity and enable future vectorization.
+ """
+ 
++from .lamsite import lam as _lam
+ import numpy as np
+ import time
+ import logging
+@@ -63,7 +64,7 @@
+         MRTS in units of "experiment compute per human" (array).
+         Positive values indicate how much experiment compute one human provides.
+     """
+-    pp = parallel_penalty
++    pp = _lam('metrics', parallel_penalty)
+ 
+     # Handle edge cases to avoid division by zero
+     if abs(alpha) < 1e-18 or abs(gamma) < 1e-18:
+@@ -235,11 +236,11 @@
+ 
+             coding_labor = L_opt
+             coding_labor_with_present_resources = L_opt_present_resources
+-            serial_coding_labor = (L_opt ** params.parallel_penalty) * params.coding_labor_normalization
+-            serial_coding_labor_with_present_resources = (L_opt_present_resources ** params.parallel_penalty) * params.coding_labor_normalization
++            serial_coding_labor = (L_opt ** _lam('metrics', params.parallel_penalty)) * params.coding_labor_normalization
++            serial_coding_labor_with_present_resources = (L_opt_present_resources ** _lam('metrics', params.parallel_penalty)) * params.coding_labor_normalization
+ 
+             if takeoff_start_human_only_stats is not None:
+-                serial_coding_labor_takeoff_start = (L_opt_takeoff_start ** params.parallel_penalty) * params.coding_labor_normalization
++                serial_coding_labor_takeoff_start = (L_opt_takeoff_start ** _lam('metrics', params.parallel_penalty)) * params.coding_labor_normalization
+ 
+         except Exception as e:
+             if should_reraise(e):
+@@ -249,11 +250,11 @@
+         # Simple CES mode
+         serial_coding_labor = compute_coding_labor_deprecated(
+             automation_fraction, inference_H100e, L_HUMAN,
+-            params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization
++            params.rho_coding_labor, _lam('metrics', params.parallel_penalty), params.coding_labor_normalization
+         )
+         # For deprecated mode, extract coding_labor (before parallel penalty)
+         if params.parallel_penalty != 0:
+-            coding_labor = (serial_coding_labor / params.coding_labor_normalization) ** (1.0 / params.parallel_penalty)
++            coding_labor = (serial_coding_labor / params.coding_labor_normalization) ** (1.0 / _lam('metrics', params.parallel_penalty))
+         else:
+             coding_labor = serial_coding_labor / params.coding_labor_normalization
+ 
+@@ -261,10 +262,10 @@
+         serial_coding_labor_with_present_resources = compute_coding_labor_deprecated(
+             automation_fraction, np.full_like(inference_H100e, present_day_inference_compute),
+             np.full_like(L_HUMAN, present_day_human_labor),
+-            params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization
++            params.rho_coding_labor, _lam('metrics', params.parallel_penalty), params.coding_labor_normalization
+         )
+         if params.parallel_penalty != 0:
+-            coding_labor_with_present_resources = (serial_coding_labor_with_present_resources / params.coding_labor_normalization) ** (1.0 / params.parallel_penalty)
++            coding_labor_with_present_resources = (serial_coding_labor_with_present_resources / params.coding_labor_normalization) ** (1.0 / _lam('metrics', params.parallel_penalty))
+         else:
+             coding_labor_with_present_resources = serial_coding_labor_with_present_resources / params.coding_labor_normalization
+ 
+@@ -273,7 +274,7 @@
+                 automation_fraction,
+                 np.full_like(inference_H100e, takeoff_start_human_only_stats['inference_H100e']),
+                 np.full_like(L_HUMAN, takeoff_start_human_only_stats['human_labor']),
+-                params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization
++                params.rho_coding_labor, _lam('metrics', params.parallel_penalty), params.coding_labor_normalization
+             )
+ 
+     # Ensure finite values
+@@ -431,7 +432,7 @@
+ 
+     # ========== STEP 11: Compute human-only metrics ==========
+     _t0 = time.perf_counter()
+-    human_only_serial_coding_labor = L_HUMAN ** params.parallel_penalty
++    human_only_serial_coding_labor = L_HUMAN ** _lam('metrics', params.parallel_penalty)
+     human_only_aggregate_research_taste = compute_aggregate_research_taste(
+         np.zeros(n_points),  # No AI research taste
+         params.taste_distribution
+@@ -458,7 +459,7 @@
+         params.alpha_experiment_capacity,
+         params.rho_experiment_capacity,
+         params.experiment_compute_exponent,
+-        params.parallel_penalty,
++        _lam('metrics', params.parallel_penalty),
+     )
+     _dt_human_only = time.perf_counter() - _t0
+ 
+@@ -477,7 +478,7 @@
+     human_labor_contribution = L_HUMAN
+     ai_labor_contribution = np.maximum(0.0, coding_labor - human_labor_contribution)
+ 
+-    if params.parallel_penalty and params.parallel_penalty != 0:
++    if _lam('metrics', params.parallel_penalty) and _lam('metrics', params.parallel_penalty) != 0:
+         ai_coding_labor_multiplier = np.where(
+             ai_labor_contribution > 0,
+             coding_labor / human_labor_contribution,
+@@ -508,7 +509,7 @@
+     with np.errstate(invalid='ignore'):
+         _serial_uplift_ref_present_day = np.power(
+             np.maximum(ai_coding_labor_mult_ref_present_day, 0.0),
+-            params.parallel_penalty,
++            _lam('metrics', params.parallel_penalty),
+         )
+     excess_serial_coding_labor_uplift_ref_present_day = np.where(
+         np.isfinite(_serial_uplift_ref_present_day),
+diff -ruN -x __pycache__ a/progress_model/parameters.py b/progress_model/parameters.py
+--- a/progress_model/parameters.py	2026-10-11 00:45:36.696520588 +0000
++++ b/progress_model/parameters.py	2026-10-11 00:55:33.443113994 +0000
+@@ -5,6 +5,7 @@
+ Contains the Parameters dataclass for model configuration with validation.
+ """
+ 
++from .lamsite import lam as _lam
+ import numpy as np
+ from dataclasses import dataclass, field
+ from typing import Optional, Dict, Union
+@@ -350,9 +351,9 @@
+ 
+             # Apply parallel_penalty transformation to coding_automation_efficiency_slope
+             # Transform: slope_transformed = slope_input ^ (0.5 / parallel_penalty)
+-            if np.isfinite(self.parallel_penalty) and self.parallel_penalty != 0:
++            if np.isfinite(_lam('eta', self.parallel_penalty)) and _lam('eta', self.parallel_penalty) != 0:
+                 try:
+-                    exponent = 0.5 / self.parallel_penalty
++                    exponent = 0.5 / _lam('eta', self.parallel_penalty)
+                     original_slope = self.coding_automation_efficiency_slope
+                     self.coding_automation_efficiency_slope = float(np.power(self.coding_automation_efficiency_slope, exponent))
+                     logger.info(f"Transformed coding_automation_efficiency_slope: {original_slope:.6f} ^ ({exponent:.6f}) = {self.coding_automation_efficiency_slope:.6f}")
+@@ -395,7 +396,7 @@
+                     serial_min, serial_max = serial_limits if isinstance(serial_limits, (list, tuple)) and len(serial_limits) == 2 else (1.0, 1e30)
+                     max_serial = float(np.clip(max_serial, serial_min, serial_max))
+                     self.max_serial_coding_labor_multiplier = max_serial
+-                    penalty = float(self.parallel_penalty)
++                    penalty = float(_lam('cap', self.parallel_penalty))
+                     if penalty <= 0:
+                         logger.warning("parallel_penalty must be positive to derive optimal_ces_frontier_cap from max_serial_coding_labor_multiplier")
+                     else:
+@@ -465,7 +466,7 @@
+ def _uplift_parallel_penalty(params) -> float:
+     """The parallel->serial exponent, or ValueError when it cannot be used."""
+     try:
+-        pp = float(params.parallel_penalty)
++        pp = float(_lam('anchor', params.parallel_penalty))
+     except (AttributeError, TypeError, ValueError) as e:
+         raise ValueError(
+             f"parallel_penalty is required to convert between the parallel and "
+diff -ruN -x __pycache__ a/progress_model/progress_rate.py b/progress_model/progress_rate.py
+--- a/progress_model/progress_rate.py	2026-10-11 00:45:36.698560837 +0000
++++ b/progress_model/progress_rate.py	2026-10-11 00:55:47.924967439 +0000
+@@ -7,6 +7,7 @@
+ progress_rate_at_time function that serves as the RHS of the ODE system.
+ """
+ 
++from .lamsite import lam as _lam, serial as _serial
+ import numpy as np
+ from typing import List
+ import logging
+@@ -373,7 +374,7 @@
+         if params.human_only:
+             automation_fraction = 0.0
+             aggregate_research_taste = 1.0
+-            coding_labor = compute_coding_labor_deprecated(None, inference_H100e, L_HUMAN, params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization, human_only=True)
++            coding_labor = _serial(L_HUMAN, t, params.parallel_penalty, params.coding_labor_normalization, True)
+         else:
+             # Compute automation fraction from cumulative progress
+             automation_fraction = compute_automation_fraction(model_progress, params)
+@@ -396,16 +397,17 @@
+                     automation_model = params.automation_model
+                     L_opt = automation_model.coding_labor_optimal_ces(H, C, lnE, params)
+                     # Match units with compute_coding_labor_deprecated: apply parallel_penalty and normalization
+-                    coding_labor = float((L_opt ** params.parallel_penalty) * params.coding_labor_normalization)
++                    coding_labor = float(_serial(L_opt, t, params.parallel_penalty, params.coding_labor_normalization, False))
+                 except Exception as e:
+                     if should_reraise(e):
+                         raise
+                     logger.warning(f"Falling back to simple CES due to optimal_ces error: {e}")
+-                    coding_labor = compute_coding_labor_deprecated(automation_fraction, inference_H100e, L_HUMAN, params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization)
++                    coding_labor = _serial(compute_coding_labor_deprecated(automation_fraction, inference_H100e, L_HUMAN, params.rho_coding_labor, 1.0, 1.0), t, params.parallel_penalty, params.coding_labor_normalization, False)
+             else:
+                 coding_labor = compute_coding_labor_deprecated(
+-                    automation_fraction, inference_H100e, L_HUMAN, params.rho_coding_labor, params.parallel_penalty, params.coding_labor_normalization
++                    automation_fraction, inference_H100e, L_HUMAN, params.rho_coding_labor, 1.0, 1.0
+                 )
++                coding_labor = _serial(coding_labor, t, params.parallel_penalty, params.coding_labor_normalization, False)
+ 
+         if not np.isfinite(coding_labor) or coding_labor < 0:
+             logger.warning(f"Invalid cognitive output: {coding_labor}")

@@ -1,0 +1,794 @@
+[
+{
+"mode": "uplift-solved",
+"asymptote": 3,
+"lam": 0.5,
+"ac": 2027.8312396470124,
+"asi": 2029.404461502104,
+"takeoff_months": 18.878662261098725
+},
+{
+"mode": "uplift-solved",
+"asymptote": 3,
+"lam": 0.65,
+"ac": 2027.8088274911802,
+"asi": 2029.3319262890477,
+"takeoff_months": 18.277185574410396
+},
+{
+"mode": "uplift-solved",
+"asymptote": 3,
+"lam": 1.0,
+"ac": 2027.7638719780948,
+"asi": 2029.241396976109,
+"takeoff_months": 17.73029997616959
+},
+{
+"mode": "uplift-solved",
+"asymptote": 5,
+"lam": 0.5,
+"ac": 2027.8138891967228,
+"asi": 2029.2155306763507,
+"takeoff_months": 16.819697755534435
+},
+{
+"mode": "uplift-solved",
+"asymptote": 5,
+"lam": 0.65,
+"ac": 2027.7845613157974,
+"asi": 2029.1110382218785,
+"takeoff_months": 15.917722872973172
+},
+{
+"mode": "uplift-solved",
+"asymptote": 5,
+"lam": 1.0,
+"ac": 2027.7257472024041,
+"asi": 2028.9786273664272,
+"takeoff_months": 15.034561968276648
+},
+{
+"mode": "uplift-solved",
+"asymptote": 10,
+"lam": 0.5,
+"ac": 2027.7956090368577,
+"asi": 2029.019021983403,
+"takeoff_months": 14.680955358543542
+},
+{
+"mode": "uplift-solved",
+"asymptote": 10,
+"lam": 0.65,
+"ac": 2027.7588083792514,
+"asi": 2028.8810480439668,
+"takeoff_months": 13.46687597658456
+},
+{
+"mode": "uplift-solved",
+"asymptote": 10,
+"lam": 1.0,
+"ac": 2027.686008809989,
+"asi": 2028.6931615086464,
+"takeoff_months": 12.085832383888373
+},
+{
+"mode": "uplift-solved",
+"asymptote": 15,
+"lam": 0.5,
+"ac": 2027.7870791722899,
+"asi": 2028.9284204963444,
+"takeoff_months": 13.696095888654781
+},
+{
+"mode": "uplift-solved",
+"asymptote": 15,
+"lam": 0.65,
+"ac": 2027.7467162065914,
+"asi": 2028.7720848309136,
+"takeoff_months": 12.304423491867055
+},
+{
+"mode": "uplift-solved",
+"asymptote": 15,
+"lam": 1.0,
+"ac": 2027.6660556967365,
+"asi": 2028.5566344208976,
+"takeoff_months": 10.686944689932716
+},
+{
+"mode": "uplift-solved",
+"asymptote": 30,
+"lam": 0.5,
+"ac": 2027.7749754720091,
+"asi": 2028.7987016046263,
+"takeoff_months": 12.284713591406216
+},
+{
+"mode": "uplift-solved",
+"asymptote": 30,
+"lam": 0.65,
+"ac": 2027.7298440889479,
+"asi": 2028.618456819953,
+"takeoff_months": 10.663352772062353
+},
+{
+"mode": "uplift-solved",
+"asymptote": 30,
+"lam": 1.0,
+"ac": 2027.6378001707853,
+"asi": 2028.3630317087118,
+"takeoff_months": 8.702778455117368
+},
+{
+"mode": "uplift-solved",
+"asymptote": 100,
+"lam": 0.5,
+"ac": 2027.757626500702,
+"asi": 2028.6363856973321,
+"takeoff_months": 10.545110359562386
+},
+{
+"mode": "uplift-solved",
+"asymptote": 100,
+"lam": 0.65,
+"ac": 2027.7067559219195,
+"asi": 2028.425833583844,
+"takeoff_months": 8.628931943094358
+},
+{
+"mode": "uplift-solved",
+"asymptote": 100,
+"lam": 1.0,
+"ac": 2027.6027810431922,
+"asi": 2028.1258530209855,
+"takeoff_months": 6.276863733519349
+},
+{
+"mode": "uplift-solved",
+"asymptote": 300,
+"lam": 0.5,
+"ac": 2027.7457957189868,
+"asi": 2028.5307083819682,
+"takeoff_months": 9.41895195577763
+},
+{
+"mode": "uplift-solved",
+"asymptote": 300,
+"lam": 0.65,
+"ac": 2027.6902684352622,
+"asi": 2028.3003257842774,
+"takeoff_months": 7.32068818818334
+},
+{
+"mode": "uplift-solved",
+"asymptote": 300,
+"lam": 1.0,
+"ac": 2027.574744650779,
+"asi": 2027.982458410406,
+"takeoff_months": 4.892565115525031
+},
+{
+"mode": "uplift-solved",
+"asymptote": 1000.0,
+"lam": 0.5,
+"ac": 2027.7358998994782,
+"asi": 2028.4447732891883,
+"takeoff_months": 8.506480676521278
+},
+{
+"mode": "uplift-solved",
+"asymptote": 1000.0,
+"lam": 0.65,
+"ac": 2027.6752573342571,
+"asi": 2028.2075315543016,
+"takeoff_months": 6.387290640533138
+},
+{
+"mode": "uplift-solved",
+"asymptote": 1000.0,
+"lam": 1.0,
+"ac": 2027.5510204090103,
+"asi": 2027.8774445989902,
+"takeoff_months": 3.9170902797586677
+},
+{
+"mode": "uplift-solved",
+"asymptote": 10000.0,
+"lam": 0.5,
+"ac": 2027.7215369008682,
+"asi": 2028.3369640840024,
+"takeoff_months": 7.385126197610589
+},
+{
+"mode": "uplift-solved",
+"asymptote": 10000.0,
+"lam": 0.65,
+"ac": 2027.6538511859,
+"asi": 2028.0803554650747,
+"takeoff_months": 5.118051350095811
+},
+{
+"mode": "uplift-solved",
+"asymptote": 10000.0,
+"lam": 1.0,
+"ac": 2027.519308866824,
+"asi": 2027.763586106968,
+"takeoff_months": 2.931326881726818
+},
+{
+"mode": "uplift-solved",
+"asymptote": 100000.0,
+"lam": 0.5,
+"ac": 2027.711430063419,
+"asi": 2028.2569165700081,
+"takeoff_months": 6.545838079070563
+},
+{
+"mode": "uplift-solved",
+"asymptote": 100000.0,
+"lam": 0.65,
+"ac": 2027.6384023453124,
+"asi": 2028.031435183328,
+"takeoff_months": 4.71639405618771
+},
+{
+"mode": "uplift-solved",
+"asymptote": 100000.0,
+"lam": 1.0,
+"ac": 2027.5004172685394,
+"asi": 2027.6733296806601,
+"takeoff_months": 2.074948945448341
+},
+{
+"mode": "uplift-solved",
+"asymptote": 100000000.0,
+"lam": 0.5,
+"ac": 2027.6920621409256,
+"asi": 2028.1502381972969,
+"takeoff_months": 5.498112676455094
+},
+{
+"mode": "uplift-solved",
+"asymptote": 100000000.0,
+"lam": 0.65,
+"ac": 2027.6116867952717,
+"asi": 2027.9159918726084,
+"takeoff_months": 3.6516609280406556
+},
+{
+"mode": "uplift-solved",
+"asymptote": 100000000.0,
+"lam": 1.0,
+"ac": 2027.4500872914916,
+"asi": 2027.5718317003336,
+"takeoff_months": 1.4609329061040626
+},
+{
+"mode": "time-horizon",
+"asymptote": 3,
+"lam": 0.5,
+"ac": 2028.4585975231207,
+"asi": 2030.2261164582021,
+"takeoff_months": 21.210227220976776
+},
+{
+"mode": "time-horizon",
+"asymptote": 3,
+"lam": 0.65,
+"ac": 2028.4190544709966,
+"asi": 2030.1308821933274,
+"takeoff_months": 20.541932667969377
+},
+{
+"mode": "time-horizon",
+"asymptote": 3,
+"lam": 1.0,
+"ac": 2028.3417444870838,
+"asi": 2030.0118705064929,
+"takeoff_months": 20.041512232908644
+},
+{
+"mode": "time-horizon",
+"asymptote": 5,
+"lam": 0.5,
+"ac": 2028.4302015709948,
+"asi": 2029.9876278676397,
+"takeoff_months": 18.689115559739548
+},
+{
+"mode": "time-horizon",
+"asymptote": 5,
+"lam": 0.65,
+"ac": 2028.3786749887083,
+"asi": 2029.8513635512343,
+"takeoff_months": 17.672262750311347
+},
+{
+"mode": "time-horizon",
+"asymptote": 5,
+"lam": 1.0,
+"ac": 2028.27799032269,
+"asi": 2029.6750284908367,
+"takeoff_months": 16.76445801776117
+},
+{
+"mode": "time-horizon",
+"asymptote": 10,
+"lam": 0.5,
+"ac": 2028.4013185351237,
+"asi": 2029.7380008627924,
+"takeoff_months": 16.04018793202522
+},
+{
+"mode": "time-horizon",
+"asymptote": 10,
+"lam": 0.65,
+"ac": 2028.3369925964373,
+"asi": 2029.554338959452,
+"takeoff_months": 14.60815635617655
+},
+{
+"mode": "time-horizon",
+"asymptote": 10,
+"lam": 1.0,
+"ac": 2028.212144165027,
+"asi": 2029.3108753098559,
+"takeoff_months": 13.18477373794667
+},
+{
+"mode": "time-horizon",
+"asymptote": 15,
+"lam": 0.5,
+"ac": 2028.3875688201133,
+"asi": 2029.6205570710379,
+"takeoff_months": 14.795859011094763
+},
+{
+"mode": "time-horizon",
+"asymptote": 15,
+"lam": 0.65,
+"ac": 2028.3174849584232,
+"asi": 2029.4148822390544,
+"takeoff_months": 13.168767367574219
+},
+{
+"mode": "time-horizon",
+"asymptote": 15,
+"lam": 1.0,
+"ac": 2028.18124540835,
+"asi": 2029.14290407828,
+"takeoff_months": 11.539904039161229
+},
+{
+"mode": "time-horizon",
+"asymptote": 30,
+"lam": 0.5,
+"ac": 2028.3671121473535,
+"asi": 2029.4579568564793,
+"takeoff_months": 13.090136509509648
+},
+{
+"mode": "time-horizon",
+"asymptote": 30,
+"lam": 0.65,
+"ac": 2028.290295293368,
+"asi": 2029.226157860334,
+"takeoff_months": 11.230350803592955
+},
+{
+"mode": "time-horizon",
+"asymptote": 30,
+"lam": 1.0,
+"ac": 2028.1363472438873,
+"asi": 2028.9118365545442,
+"takeoff_months": 9.305871727882732
+},
+{
+"mode": "time-horizon",
+"asymptote": 100,
+"lam": 0.5,
+"ac": 2028.3417725756267,
+"asi": 2029.2575299488888,
+"takeoff_months": 10.989088479144812
+},
+{
+"mode": "time-horizon",
+"asymptote": 100,
+"lam": 0.65,
+"ac": 2028.2520036054877,
+"asi": 2028.994464552046,
+"takeoff_months": 8.909531358700406
+},
+{
+"mode": "time-horizon",
+"asymptote": 100,
+"lam": 1.0,
+"ac": 2028.077685505236,
+"asi": 2028.629422868468,
+"takeoff_months": 6.620848358783405
+},
+{
+"mode": "time-horizon",
+"asymptote": 300,
+"lam": 0.5,
+"ac": 2028.3241796269829,
+"asi": 2029.1330454083281,
+"takeoff_months": 9.706389376143306
+},
+{
+"mode": "time-horizon",
+"asymptote": 300,
+"lam": 0.65,
+"ac": 2028.2266642871082,
+"asi": 2028.857409631158,
+"takeoff_months": 7.5689441285967405
+},
+{
+"mode": "time-horizon",
+"asymptote": 300,
+"lam": 1.0,
+"ac": 2028.0364805624379,
+"asi": 2028.4599771576218,
+"takeoff_months": 5.08195914220687
+},
+{
+"mode": "time-horizon",
+"asymptote": 1000.0,
+"lam": 0.5,
+"ac": 2028.3090892858268,
+"asi": 2029.0350245281202,
+"takeoff_months": 8.711222907521005
+},
+{
+"mode": "time-horizon",
+"asymptote": 1000.0,
+"lam": 0.65,
+"ac": 2028.2057864227124,
+"asi": 2028.749168977209,
+"takeoff_months": 6.520590653957697
+},
+{
+"mode": "time-horizon",
+"asymptote": 1000.0,
+"lam": 1.0,
+"ac": 2028.0048156142784,
+"asi": 2028.3345227403822,
+"takeoff_months": 3.9564855132457524
+},
+{
+"mode": "time-horizon",
+"asymptote": 10000.0,
+"lam": 0.5,
+"ac": 2028.2879303723848,
+"asi": 2028.908437319842,
+"takeoff_months": 7.446083369486587
+},
+{
+"mode": "time-horizon",
+"asymptote": 10000.0,
+"lam": 0.65,
+"ac": 2028.1735252126105,
+"asi": 2028.6098955684895,
+"takeoff_months": 5.236444270548418
+},
+{
+"mode": "time-horizon",
+"asymptote": 10000.0,
+"lam": 1.0,
+"ac": 2027.951715266635,
+"asi": 2028.1750098026814,
+"takeoff_months": 2.6795344325582846
+},
+{
+"mode": "time-horizon",
+"asymptote": 100000.0,
+"lam": 0.5,
+"ac": 2028.2717709026056,
+"asi": 2028.835629701685,
+"takeoff_months": 6.76630558895431
+},
+{
+"mode": "time-horizon",
+"asymptote": 100000.0,
+"lam": 0.65,
+"ac": 2028.150428018772,
+"asi": 2028.5381919678482,
+"takeoff_months": 4.65316738891579
+},
+{
+"mode": "time-horizon",
+"asymptote": 100000.0,
+"lam": 1.0,
+"ac": 2027.9179615003818,
+"asi": 2028.0795082966076,
+"takeoff_months": 1.9385615547098496
+},
+{
+"mode": "time-horizon",
+"asymptote": 100000000.0,
+"lam": 0.5,
+"ac": 2028.2446740085827,
+"asi": 2028.6912079464541,
+"takeoff_months": 5.358407254457234
+},
+{
+"mode": "time-horizon",
+"asymptote": 100000000.0,
+"lam": 0.65,
+"ac": 2028.1114735277579,
+"asi": 2028.3709940729038,
+"takeoff_months": 3.114246541751527
+},
+{
+"mode": "time-horizon",
+"asymptote": 100000000.0,
+"lam": 1.0,
+"ac": 2027.8511725565506,
+"asi": 2027.9706601848843,
+"takeoff_months": 1.4338515400040706
+},
+{
+"mode": "revenue",
+"asymptote": 3,
+"lam": 0.5,
+"ac": 2028.211102701167,
+"asi": 2029.8945169165854,
+"takeoff_months": 20.200970585021423
+},
+{
+"mode": "revenue",
+"asymptote": 3,
+"lam": 0.65,
+"ac": 2028.1782845185812,
+"asi": 2029.8086737891736,
+"takeoff_months": 19.56467124710798
+},
+{
+"mode": "revenue",
+"asymptote": 3,
+"lam": 1.0,
+"ac": 2028.1144399256236,
+"asi": 2029.7011806650771,
+"takeoff_months": 19.040888873441872
+},
+{
+"mode": "revenue",
+"asymptote": 5,
+"lam": 0.5,
+"ac": 2028.1864985469324,
+"asi": 2029.6757094638342,
+"takeoff_months": 17.870531002821735
+},
+{
+"mode": "revenue",
+"asymptote": 5,
+"lam": 0.65,
+"ac": 2028.1435059144321,
+"asi": 2029.5514438130326,
+"takeoff_months": 16.895254783205928
+},
+{
+"mode": "revenue",
+"asymptote": 5,
+"lam": 1.0,
+"ac": 2028.060593251369,
+"asi": 2029.3919167297356,
+"takeoff_months": 15.975881740399018
+},
+{
+"mode": "revenue",
+"asymptote": 10,
+"lam": 0.5,
+"ac": 2028.161073198563,
+"asi": 2029.4451751373779,
+"takeoff_months": 15.409223265779474
+},
+{
+"mode": "revenue",
+"asymptote": 10,
+"lam": 0.65,
+"ac": 2028.1091688512254,
+"asi": 2029.2797575820023,
+"takeoff_months": 14.047064769322787
+},
+{
+"mode": "revenue",
+"asymptote": 10,
+"lam": 1.0,
+"ac": 2028.0054196562758,
+"asi": 2029.0630788193082,
+"takeoff_months": 12.691909956389281
+},
+{
+"mode": "revenue",
+"asymptote": 15,
+"lam": 0.5,
+"ac": 2028.1489030140808,
+"asi": 2029.3378779162178,
+"takeoff_months": 14.267698825644402
+},
+{
+"mode": "revenue",
+"asymptote": 15,
+"lam": 0.65,
+"ac": 2028.0924225740316,
+"asi": 2029.1545746008287,
+"takeoff_months": 12.745824321565124
+},
+{
+"mode": "revenue",
+"asymptote": 15,
+"lam": 1.0,
+"ac": 2027.9786969374106,
+"asi": 2028.9093486207018,
+"takeoff_months": 11.1678201994946
+},
+{
+"mode": "revenue",
+"asymptote": 30,
+"lam": 0.5,
+"ac": 2028.1320214799,
+"asi": 2029.1885289464024,
+"takeoff_months": 12.678089598028237
+},
+{
+"mode": "revenue",
+"asymptote": 30,
+"lam": 0.65,
+"ac": 2028.068027888927,
+"asi": 2028.9822888540336,
+"takeoff_months": 10.971131581280133
+},
+{
+"mode": "revenue",
+"asymptote": 30,
+"lam": 1.0,
+"ac": 2027.9406045956102,
+"asi": 2028.694115063745,
+"takeoff_months": 9.042125617615966
+},
+{
+"mode": "revenue",
+"asymptote": 100,
+"lam": 0.5,
+"ac": 2028.1092466306316,
+"asi": 2029.005134897706,
+"takeoff_months": 10.750659204893964
+},
+{
+"mode": "revenue",
+"asymptote": 100,
+"lam": 0.65,
+"ac": 2028.0351744882464,
+"asi": 2028.7701483557457,
+"takeoff_months": 8.819686409991846
+},
+{
+"mode": "revenue",
+"asymptote": 100,
+"lam": 1.0,
+"ac": 2027.8919600600484,
+"asi": 2028.4293022703591,
+"takeoff_months": 6.448106523728711
+},
+{
+"mode": "revenue",
+"asymptote": 300,
+"lam": 0.5,
+"ac": 2028.0946028943977,
+"asi": 2028.889099367126,
+"takeoff_months": 9.533957672739234
+},
+{
+"mode": "revenue",
+"asymptote": 300,
+"lam": 0.65,
+"ac": 2028.0141205034479,
+"asi": 2028.639067747284,
+"takeoff_months": 7.499366926032053
+},
+{
+"mode": "revenue",
+"asymptote": 300,
+"lam": 1.0,
+"ac": 2027.8544016033607,
+"asi": 2028.2693214413948,
+"takeoff_months": 4.9790380564099905
+},
+{
+"mode": "revenue",
+"asymptote": 1000.0,
+"lam": 0.5,
+"ac": 2028.0799300728988,
+"asi": 2028.7942808202354,
+"takeoff_months": 8.572208968038467
+},
+{
+"mode": "revenue",
+"asymptote": 1000.0,
+"lam": 0.65,
+"ac": 2027.9955424131,
+"asi": 2028.5356269144227,
+"takeoff_months": 6.481014015870642
+},
+{
+"mode": "revenue",
+"asymptote": 1000.0,
+"lam": 1.0,
+"ac": 2027.824330211514,
+"asi": 2028.1551489996177,
+"takeoff_months": 3.969825457244042
+},
+{
+"mode": "revenue",
+"asymptote": 10000.0,
+"lam": 0.5,
+"ac": 2028.0609094403464,
+"asi": 2028.6712219999129,
+"takeoff_months": 7.323750714796915
+},
+{
+"mode": "revenue",
+"asymptote": 10000.0,
+"lam": 0.65,
+"ac": 2027.9667026615305,
+"asi": 2028.3928860557583,
+"takeoff_months": 5.114200730733501
+},
+{
+"mode": "revenue",
+"asymptote": 10000.0,
+"lam": 1.0,
+"ac": 2027.7837244503855,
+"asi": 2028.009810514988,
+"takeoff_months": 2.713032775229294
+},
+{
+"mode": "revenue",
+"asymptote": 100000.0,
+"lam": 0.5,
+"ac": 2028.047092848241,
+"asi": 2028.59544429993,
+"takeoff_months": 6.580217420269037
+},
+{
+"mode": "revenue",
+"asymptote": 100000.0,
+"lam": 0.65,
+"ac": 2027.9467321853967,
+"asi": 2028.3339055443341,
+"takeoff_months": 4.646080307248667
+},
+{
+"mode": "revenue",
+"asymptote": 100000.0,
+"lam": 1.0,
+"ac": 2027.7489574262777,
+"asi": 2027.9541220830665,
+"takeoff_months": 2.46197588146606
+},
+{
+"mode": "revenue",
+"asymptote": 100000000.0,
+"lam": 0.5,
+"ac": 2028.022491221728,
+"asi": 2028.46320611281,
+"takeoff_months": 5.288578692984629
+},
+{
+"mode": "revenue",
+"asymptote": 100000000.0,
+"lam": 0.65,
+"ac": 2027.9121356676183,
+"asi": 2028.1724228885157,
+"takeoff_months": 3.123446650769438
+},
+{
+"mode": "revenue",
+"asymptote": 100000000.0,
+"lam": 1.0,
+"ac": 2027.70093659395,
+"asi": 2027.849974875257,
+"takeoff_months": 1.7884593756834875
+}
+]

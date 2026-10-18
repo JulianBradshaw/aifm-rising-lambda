@@ -1,0 +1,4 @@
+anchor_mode,serial_gain,labor_elasticity_today,labor_elasticity_ac,headroom_today,headroom_ac,throughput_gain,share_lost_labor_weight,share_lost_saturation
+uplift-solved,2.4194,0.3189,0.2562,11.92,6.78,1.24,68.1,7.5
+time-horizon,2.9282,0.3189,0.2497,11.92,6.41,1.2866,68.1,8.4
+revenue,2.7643,0.3189,0.2511,11.92,6.51,1.2721,68.1,8.2

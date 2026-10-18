@@ -1,0 +1,4 @@
+anchor_mode,labor_growth_to_ac_lambda05,serial_labor_gain_at_ac,months_today_to_ac,share_lost_ces,share_lost_asymptote,share_lost_stock_training,share_lost_backloading,share_left,ac_shift_months_shapley
+uplift-solved,361.4,2.4718,14.51,50.6,24.8,8.7,9.8,6.1,-0.738
+time-horizon,1290.3,2.8486,21.71,50.8,25.2,7.7,10.6,5.7,-1.053
+revenue,878.8,2.6633,18.85,50.7,25.0,8.5,9.8,5.9,-0.873

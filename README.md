@@ -2,7 +2,7 @@
 
 A small variant of the public [AI Futures Model](https://github.com/AI-Futures-Project/aifm-public) that uses one parallelization penalty λ for the past and a separate one for the future. The upstream model is preserved unchanged in `upstream/` as a git submodule pinned to commit `1c40ecdb246c25980515441a66571931c5604e11` (MIT license in `upstream/LICENSE`); clone with `git clone --recurse-submodules`. This variant is MIT-licensed (`LICENSE`).
 
-**[Run it in the browser](web/README.md)** · [results for the Daniel preset](outputs/REPORT.md) · [the same change as a patch to upstream](upstream-patch/)
+**[Run it in the browser](web/README.md)** · [results for the Daniel preset](outputs/REPORT.md) · [the same change as a patch to upstream](upstream-patch/) · [figures of how λ moves the model's timelines](figures/)
 
 ## Why two λs
 
@@ -87,3 +87,4 @@ print(upstream_single_lambda(1.0)['takeoff_months'])  # the unmodified model at 
 - `upstream-patch/`: the same change as diffs against `upstream/progress_model`.
 - `tests/`: reproduction of upstream at λ 0.5, pinned calibration, the patch, and the browser entry point.
 - `web/`: the browser page.
+- `figures/`: scripts and data for the λ charts, for the unmodified model and the two-λ variant (`python figures/make.py`).

@@ -5,3 +5,4 @@ __pycache__/
 upstream/node_modules/
 upstream/.next/
 web/model.zip
+figures/.cache/

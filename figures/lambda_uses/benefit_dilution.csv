@@ -1,0 +1,4 @@
+anchor_mode,months_today_to_ac,labor_growth_to_ac,serial_labor_gain_at_ac,throughput_gain_at_ac,progress_rate_gain_at_ac,avg_extra_progress,ac_shift_months
+uplift-solved,14.51,361.4,2.4194,1.24,1.1228,0.0426,-0.484
+time-horizon,21.71,1290.3,2.9282,1.2866,1.1649,0.0503,-0.841
+revenue,18.85,878.8,2.7643,1.2721,1.1616,0.0478,-0.678
