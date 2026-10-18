@@ -35,7 +35,7 @@ Daniel 08/16/26 preset, Coding Uplift anchor, native present day; single runs at
 | Takeoff, AC to ASI | λ 0.5 | λ 0.65 | λ 0.8 | λ 1 |
 | --- | --- | --- | --- | --- |
 | Two-λ, η linear (default) | 13.7 mo | 13.3 mo | 13.0 mo | 12.7 mo |
-| Two-λ, η power | 13.7 mo | 12.8 mo | 12.2 mo | 11.6 mo |
+| Two-λ, η power | 13.7 mo | 13.3 mo | 12.8 mo | 12.3 mo |
 | Two-λ, η not rescaled | 13.7 mo | 12.3 mo | 11.5 mo | 10.9 mo |
 | Single λ (upstream) | 13.7 mo | 14.5 mo | 15.8 mo | 18.2 mo |
 
