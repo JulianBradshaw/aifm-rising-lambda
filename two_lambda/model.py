@@ -17,6 +17,11 @@ Labor Multiplier keeps its serial meaning: its parallel cap is converted with th
 No upstream files, global functions, or calibrated Parameters are mutated. With
 lambda_forward equal to the preset's λ, the result is the upstream trajectory itself.
 Milestones are dated where log10 effective compute crosses each threshold.
+
+An optional λ schedule lets the forward λ rise after t0, from lambda_forward to lambda_end over
+a ramp. Serial labor then grows as d ln(serial) = λ(t) d ln X, which needs one extra solver
+state (see ForwardLabor). With lambda_end unset or equal to lambda_forward the run is the
+fixed forward λ above. See DESIGN.md.
 """
 import copy
 from dataclasses import dataclass, asdict
@@ -36,6 +41,7 @@ from progress_model import config as cfg
 from progress_model.progress_rate import progress_rate_at_time
 
 ETA_RESCALES = ('linear', 'power', 'none')
+RAMP_SHAPES = ('linear', 'smoothstep')
 
 
 def interpolate(data, key, t):
@@ -92,15 +98,58 @@ class Variant:
 
     eta_rescale sets how η is adjusted for lambda_forward after that date: 'linear' is
     η * (λ_cal/λ_forward), 'power' is upstream's η^(λ_cal/λ_forward), 'none' keeps η.
+
+    lambda_end sets a λ schedule: λ moves from lambda_forward to lambda_end over ramp_years
+    starting at ramp_start (None means the calibration date), linearly or as a smoothstep.
+    lambda_forward stays the λ at the calibration date, and η is rescaled for it alone.
     """
     lambda_forward: float = 0.5
     eta_rescale: str = 'linear'
+    lambda_end: float | None = None
+    ramp_start: float | None = None
+    ramp_years: float = 1.0
+    ramp_shape: str = 'linear'
 
     def __post_init__(self):
         if not math.isfinite(self.lambda_forward) or not 0.05 <= self.lambda_forward <= 2:
             raise ValueError('lambda_forward must be in [0.05, 2]')
         if self.eta_rescale not in ETA_RESCALES:
             raise ValueError(f'eta_rescale must be one of {ETA_RESCALES}')
+        if self.lambda_end is not None and (not math.isfinite(self.lambda_end) or not 0.05 <= self.lambda_end <= 2):
+            raise ValueError('lambda_end must be in [0.05, 2]')
+        if not math.isfinite(self.ramp_years) or self.ramp_years <= 0:
+            raise ValueError('ramp_years must be positive')
+        if self.ramp_start is not None and not math.isfinite(self.ramp_start):
+            raise ValueError('ramp_start must be finite')
+        if self.ramp_shape not in RAMP_SHAPES:
+            raise ValueError(f'ramp_shape must be one of {RAMP_SHAPES}')
+
+    @property
+    def rising(self):
+        """True when λ changes after the calibration date."""
+        return self.lambda_end is not None and self.lambda_end != self.lambda_forward
+
+    def ramp_window(self, t0):
+        start = t0 if self.ramp_start is None else self.ramp_start
+        return start, start + self.ramp_years
+
+    def lambda_at(self, t, t0):
+        """Forward λ at time t (t0 is the calibration date)."""
+        if not self.rising:
+            return self.lambda_forward
+        start, stop = self.ramp_window(t0)
+        x = min(max((t - start) / self.ramp_years, 0.0), 1.0)
+        q = x if self.ramp_shape == 'linear' else x*x*(3 - 2*x)
+        return self.lambda_forward + (self.lambda_end - self.lambda_forward) * q
+
+    def lambda_rate(self, t, t0):
+        """dλ/dt at time t."""
+        start, stop = self.ramp_window(t0)
+        if not self.rising or not start < t < stop:
+            return 0.0
+        x = (t - start) / self.ramp_years
+        dq = 1.0 if self.ramp_shape == 'linear' else 6*x*(1 - x)
+        return (self.lambda_end - self.lambda_forward) * dq / self.ramp_years
 
     def eta_factor(self, eta, lambda_cal):
         """Forward η divided by calibrated η; eta is the input value in OOMs per progress-year."""
@@ -134,10 +183,18 @@ class ForwardLabor:
     X0^lambda_cal * (X/X0)^lambda_forward. The forward η stretches the effective-compute axis
     above t0's progress by eta_factor, which leaves which tasks are automated unchanged and
     multiplies every task's efficiency growth after t0 by the same factor.
+
+    With a λ schedule, serial labor grows as d ln(serial) = λ(t) d ln X. Integrating by parts,
+    ln(serial / norm) = lambda_cal ln X0 + λ(t) ln(X/X0) - W, with W = ∫ λ'(τ) ln(X/X0) dτ from
+    t0, so only W needs a solver state and no derivative of X is needed. at(t, W) sets the λ
+    and W for the next call; log_growth holds the ln(X/X0) it used, for W's derivative.
+    Changing λ directly in X0 (X/X0)^(λ/lambda_cal) would instead reprice all labor growth since
+    t0 whenever λ moves.
     """
     def __init__(self, params, variant, eta, progress0, human0, inference0):
         self.base, self.lambda_cal = params.automation_model, params.parallel_penalty
         self.exponent = variant.lambda_forward / self.lambda_cal
+        self.rising, self.lam, self.w, self.log_growth = variant.rising, variant.lambda_forward, 0.0, 0.0
         self.k = variant.eta_factor(eta, self.lambda_cal)
         self.ln0 = math.log(cfg.BASE_FOR_SOFTWARE_LOM) * progress0
         self.x0 = self.base.coding_labor_optimal_ces(human0, inference0, self.ln0, params)
@@ -153,13 +210,19 @@ class ForwardLabor:
         n0 = self.x0 / human0
         cap = params.max_serial_coding_labor_multiplier
         # At lambda_forward == lambda_cal the frontier cap is upstream's own and does not drift.
-        self.max_parallel_per_human = None if cap is None or self.exponent == 1 else cap**(1/self.lambda_cal)
+        # With a λ schedule the frontier keeps the cap for lambda_forward and the exact cap does the rest.
+        self.max_parallel_per_human = (None if cap is None or (self.exponent == 1 and not self.rising)
+                                       else cap**(1/self.lambda_cal))
         if cap is not None:
             self.params.optimal_ces_frontier_cap = float(np.clip(
                 n0 * (cap / n0**self.lambda_cal)**(1/variant.lambda_forward), *cfg.PARAMETER_BOUNDS['optimal_ces_frontier_cap']))
         self.xf0 = self.forward.coding_labor_optimal_ces(human0, inference0, self.ln0, self.params)
         if not all(np.isfinite([self.x0, self.xf0])) or min(self.x0, self.xf0) <= 0:
             raise FloatingPointError('Invalid coding labor at the calibration date')
+
+    def at(self, lam, w):
+        self.lam, self.w = lam, w
+        return self
 
     def stretch(self, x, x0):
         return np.where(x > x0, x0 + self.k*(x - x0), x)
@@ -168,7 +231,11 @@ class ForwardLabor:
         x = self.forward.coding_labor_optimal_ces(H, C, self.stretch(logE, self.ln0), self.params)
         if x is None or not np.all(np.isfinite(x)):
             raise FloatingPointError('Forward coding labor failed')
-        x = self.x0 * (x / self.xf0)**self.exponent
+        if self.rising:
+            self.log_growth = np.log(x / self.xf0)
+            x = self.x0 * np.exp((self.lam * self.log_growth - self.w) / self.lambda_cal)
+        else:
+            x = self.x0 * (x / self.xf0)**self.exponent
         return x if self.max_parallel_per_human is None else np.minimum(x, H * self.max_parallel_per_human)
 
     def __getattr__(self, name):
@@ -207,7 +274,10 @@ def simulate(variant=None, anchor='uplift-solved', end=2040.0, max_step=1/24, *,
     targets = thresholds(model)
     rs0 = float(model.results['research_stock'][0])
     eta = eta_input(model)
-    unchanged = not force_ode and variant.lambda_forward == p.parallel_penalty and variant.eta_factor(eta, p.parallel_penalty) == 1
+    unchanged = (not force_ode and variant.lambda_forward == p.parallel_penalty and not variant.rising
+                 and variant.eta_factor(eta, p.parallel_penalty) == 1)
+    if variant.rising and variant.ramp_window(t0)[0] < t0:
+        raise ValueError('the λ ramp cannot start before the calibration date')
     status, solved_until, forward, segments = 'complete', end, None, []
     if unchanged:
         full_times = np.asarray(model.results['times'])
@@ -227,18 +297,30 @@ def simulate(variant=None, anchor='uplift-solved', end=2040.0, max_step=1/24, *,
             return y[0]-ceiling
         ceiling_event.terminal, ceiling_event.direction = True, 1
         state = [model.results['progress'][0], rs0]
-        for a, b in [(2017., t0), (t0, end)]:
+        # The ramp's ends are kinks in λ, so the solver restarts there.
+        breaks = [x for x in variant.ramp_window(t0) if variant.rising and t0 < x < end]
+        bounds = [2017., t0, *breaks, end]
+        for a, b in zip(bounds[:-1], bounds[1:]):
             if a == t0:
                 forward = forward_params(model, variant, t0, float(state[0]))
+                if variant.rising:
+                    state = [*state, 0.0]  # W, see ForwardLabor
             params = p if forward is None else forward
-            rhs = lambda t, y: progress_rate_at_time(t, y, data, params, RS_0=rs0)
+            if forward is None or not variant.rising:
+                rhs = lambda t, y: progress_rate_at_time(t, y, data, params, RS_0=rs0)
+            else:
+                def rhs(t, y, params=params):
+                    labor = params.automation_model.at(variant.lambda_at(t, t0), y[2])
+                    labor.log_growth = 0.0
+                    rate = progress_rate_at_time(t, y[:2], data, params, RS_0=rs0)
+                    return [*rate, variant.lambda_rate(t, t0) * float(labor.log_growth)]
             sol = solve_ivp(rhs, [a, b], state, method='Radau', rtol=1e-6, atol=1e-8,
                             max_step=max_step, dense_output=True, events=ceiling_event)
             if not sol.success:
                 raise RuntimeError(sol.message)
             segments.append((a, float(sol.t[-1]), sol.sol))
             mask = (times >= a) & (times <= sol.t[-1])
-            raw[mask], stock[mask] = sol.sol(times[mask])
+            raw[mask], stock[mask] = sol.sol(times[mask])[:2]
             state = sol.y[:,-1].copy()
             if sol.status == 1:
                 status, solved_until = 'capability_ceiling', float(sol.t[-1])
@@ -280,6 +362,7 @@ def simulate(variant=None, anchor='uplift-solved', end=2040.0, max_step=1/24, *,
             interpolate(data, 'L_HUMAN', t0), interpolate(data, 'inference_H100e', t0),
             math.log(cfg.BASE_FOR_SOFTWARE_LOM)*progress0, p)) / interpolate(data, 'L_HUMAN', t0),
         'eta_calibration': eta, 'eta_forward': eta*variant.eta_factor(eta, p.parallel_penalty),
+        'lambda_at': {k: variant.lambda_at(m, t0) for k, m in milestones.items() if m is not None},
         'status': status, 'solved_until': solved_until, 'times': times, 'log10_E': raw, 'research_stock': stock}
 
 

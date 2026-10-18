@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Two-λ AI Futures Model</title>
-<meta name="description" content="Run a two-λ version of the AI Futures Model in your browser: history and calibration keep λ = 0.5, and a separate λ applies to coding labor from today on.">
+<title>Rising-λ AI Futures Model</title>
+<meta name="description" content="Run a two-λ version of the AI Futures Model in your browser: history and calibration keep λ = 0.5, and a separate λ, which can rise over time, applies to coding labor from today on.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="top">
-  <h1>Two-λ AI Futures Model</h1>
-  <p class="lede">The <a href="https://github.com/AI-Futures-Project/aifm-public">AI Futures Model</a> with one λ for the past and another for the future, running entirely in your browser. The dashed line is the preset at λ 0.5, the solid line the two-λ variant, and the dotted line the original model with the same λ everywhere.</p>
+  <h1>Rising-λ AI Futures Model</h1>
+  <p class="lede">The <a href="https://github.com/AI-Futures-Project/aifm-public">AI Futures Model</a> with one λ for the past and another for the future that can rise over time, running entirely in your browser. The dashed line is the preset at λ 0.5, the solid line the two-λ variant, and the dotted line the original model with the same λ everywhere.</p>
 </header>
 
 <main class="layout">
@@ -41,6 +41,20 @@
       <legend>Parallel coding labor</legend>
       <div class="slider" data-key="lambda"></div>
       <div class="slider" data-key="ila"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>λ rising over time</legend>
+      <div class="slider" data-key="lambda_rise"></div>
+      <div class="slider" data-key="ramp_start"></div>
+      <div class="slider" data-key="ramp_years"></div>
+      <div class="field">
+        <label for="ramp_shape">Shape of the rise</label>
+        <select id="ramp_shape">
+          <option value="linear">Straight line</option>
+          <option value="smoothstep">S-curve (smoothstep)</option>
+        </select>
+      </div>
     </fieldset>
 
     <div class="field">
@@ -87,8 +101,9 @@
         <li><strong>λ</strong> is the return to parallel coding labor: doubling it multiplies serial labor by 2<sup>λ</sup>. The original model uses one λ for historical human teams and future AI swarms alike.</li>
         <li>With one λ, raising it also changes two calibrations of the past: today's measured coding uplift is read as less automation, and returns to software research (r) are refit to 2024 progress. Both lengthen takeoff and can outweigh the direct benefit.</li>
         <li>The <strong>two-λ variant</strong> keeps both calibrations at λ 0.5, so today's automation and r are unchanged, and applies the forward λ only to growth in coding labor after today.</li>
+        <li><strong>λ rising over time</strong> moves the forward λ from its value today to a higher one over the chosen period. Serial coding labor grows at the λ in force when the parallel labor grows, so a rise does not revalue the growth that came before it. η is rescaled for today's forward λ only. With no rise this is the fixed forward λ. The variant line uses the schedule; the dotted original-model line uses the forward λ alone.</li>
         <li><strong>AC</strong> is the automated coder and <strong>ASI</strong> artificial superintelligence, as defined by the AI Futures Model. Takeoff is the time from AC to ASI. Coding Uplift anchor.</li>
-        <li>The original model accepts λ up to 1. Everything is solved in your browser with <a href="https://pyodide.org">Pyodide</a>. Source and method: <a href="https://github.com/JulianBradshaw/aifm-lambda-fixes">aifm-lambda-fixes</a>.</li>
+        <li>The original model accepts λ up to 1. Everything is solved in your browser with <a href="https://pyodide.org">Pyodide</a>. Source and method: <a href="https://github.com/JulianBradshaw/aifm-rising-lambda">aifm-rising-lambda</a>, built on <a href="https://github.com/JulianBradshaw/aifm-lambda-fixes">aifm-lambda-fixes</a>.</li>
       </ul>
     </section>
   </section>

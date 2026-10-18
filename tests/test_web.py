@@ -31,3 +31,15 @@ def test_runner_asymptote_and_eta(runner):
     common = dict(present_day=2025.6, overrides=(('inf_labor_asymptote', 100.0),))
     assert out['scenario']['takeoff_months'] == pytest.approx(simulate(Variant(0.65, 'none'), **common)['takeoff_months'], abs=1e-6)
     assert out['baseline']['takeoff_months'] == pytest.approx(simulate(**common)['takeoff_months'], abs=1e-6)
+
+
+def test_runner_rising_lambda(runner):
+    settings = {'lambda': 0.65, 'ila': 15, 'eta': 'linear', 'lambda_rise': 0.35, 'ramp_start': 2027, 'ramp_years': 0.75, 'ramp_shape': 'smoothstep'}
+    out = json.loads(runner.run('daniel-08-16-26', json.dumps(settings)))
+    direct = simulate(Variant(0.65, lambda_end=1.0, ramp_start=2027.0, ramp_years=0.75, ramp_shape='smoothstep'))
+    assert out['scenario']['takeoff_months'] == pytest.approx(direct['takeoff_months'], abs=1e-6)
+    flat = json.loads(runner.run('daniel-08-16-26', json.dumps(dict(settings, lambda_rise=0))))
+    assert flat['scenario']['takeoff_months'] == pytest.approx(simulate(Variant(0.65))['takeoff_months'], abs=1e-6)
+    # A start before today is moved to today.
+    early = json.loads(runner.run('daniel-08-16-26', json.dumps(dict(settings, ramp_start=2026.0))))
+    assert early['scenario']['milestones']['AC'] is not None

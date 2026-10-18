@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, '/home/pyodide/app')
 
 import numpy as np
-from two_lambda.model import Variant, calibrate, simulate, thresholds, upstream_single_lambda
+from two_lambda.model import Variant, calibrate, calibration_end, simulate, thresholds, upstream_single_lambda
 
 ANCHOR = 'uplift-solved'
 DATES = {'native': None, 'legacy': 2025.6}
@@ -62,6 +62,12 @@ def run(preset, settings_json):
     common = dict(preset=preset, present_day=present_day, overrides=overrides)
     base = _cached((preset, dates, overrides, 'base'), lambda: simulate(Variant(model.params.parallel_penalty), ANCHOR, **common))
     base['thresholds'] = {k: float(v) for k, v in thresholds(model).items()}
-    scenario = _pack(simulate(Variant(lam, eta), ANCHOR, **common))
+    rise = float(s.get('lambda_rise', 0))
+    schedule = {}
+    if rise > 0:
+        # The slider's earliest start is today, rounded; never start before the calibration date.
+        schedule = dict(lambda_end=lam + rise, ramp_start=max(float(s['ramp_start']), calibration_end(model)),
+                        ramp_years=float(s['ramp_years']), ramp_shape=s.get('ramp_shape', 'linear'))
+    scenario = _pack(simulate(Variant(lam, eta, **schedule), ANCHOR, **common))
     single = _cached((preset, dates, overrides, 'single', lam), lambda: upstream_single_lambda(lam, ANCHOR, **common))
     return json.dumps({'baseline': base, 'scenario': scenario, 'comparison': single})

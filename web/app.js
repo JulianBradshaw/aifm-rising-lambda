@@ -35,17 +35,27 @@ const SLIDERS = {
     hint: (p) => `Applies to coding labor growth from today on; history and calibration keep the preset's ${p.lambda}. Small-team estimates today suggest about 0.65` },
   ila: { label: 'Coding-labor asymptote', min: 0.5, max: 4.3, step: 0.01, log: true, fmt: (v) => `${fmtSig(v)}×`,
     hint: (p) => `Preset ${fmtSig(p.ila)}×. Changing it recalibrates all three runs` },
+  lambda_rise: { label: 'λ rises by', min: 0, max: 0.7, step: 0.05, fmt: (v) => `+${v.toFixed(2)}`,
+    hint: () => `λ moves from the forward λ to forward λ + this over the rise below. 0 keeps λ flat. Each rise applies only to labor growth after it` },
+  ramp_start: { label: 'Rise starts', min: 2026.58, max: 2032, step: 0.01, fmt: (v) => fmtDate(v),
+    hint: () => 'No earlier than today' },
+  ramp_years: { label: 'Rise takes', min: 0.25, max: 10, step: 0.05, fmt: (v) => `${v.toFixed(2).replace(/\.?0+$/, '')} years`,
+    hint: () => 'The 2024–26 trend, about +0.07 a year, reaches 1 from 0.65 in about 4.9 years' },
 };
+const FLAT = { lambda_rise: 0 };
 const EXAMPLES = [
-  { id: 'preset', label: 'Preset λ', set: (p) => ({ lambda: p.lambda, ila: p.ila, eta: 'linear' }) },
-  { id: 'estimated', label: 'Estimated λ 0.65', set: (p) => ({ lambda: 0.65, ila: p.ila, eta: 'linear' }) },
-  { id: 'full', label: 'λ 1', set: (p) => ({ lambda: 1, ila: p.ila, eta: 'linear' }) },
-  { id: 'full100', label: 'λ 1, asymptote 100', set: () => ({ lambda: 1, ila: 100, eta: 'linear' }) },
+  { id: 'preset', label: 'Preset λ', set: (p) => ({ lambda: p.lambda, ila: p.ila, eta: 'linear', ...FLAT }) },
+  { id: 'estimated', label: 'Estimated λ 0.65', set: (p) => ({ lambda: 0.65, ila: p.ila, eta: 'linear', ...FLAT }) },
+  { id: 'trend', label: 'λ trend to 1', set: (p) => ({ lambda: 0.65, ila: p.ila, eta: 'linear', lambda_rise: 0.35, ramp_start: 2026.58, ramp_years: 4.85, ramp_shape: 'linear' }) },
+  { id: 'ramp2027', label: 'λ to 1 during 2027', set: (p) => ({ lambda: 0.65, ila: p.ila, eta: 'linear', lambda_rise: 0.35, ramp_start: 2027, ramp_years: 0.75, ramp_shape: 'smoothstep' }) },
+  { id: 'full', label: 'λ 1', set: (p) => ({ lambda: 1, ila: p.ila, eta: 'linear', ...FLAT }) },
+  { id: 'full100', label: 'λ 1, asymptote 100', set: () => ({ lambda: 1, ila: 100, eta: 'linear', ...FLAT }) },
 ];
-const DEFAULTS = { lambda: 0.65, ila: 15, eta: 'linear', dates: 'native' };
+const DEFAULTS = { lambda: 0.65, ila: 15, eta: 'linear', dates: 'native',
+  lambda_rise: 0.35, ramp_start: 2026.58, ramp_years: 4.85, ramp_shape: 'linear' };
 const LABELS = { base: 'Preset λ', scen: 'Two-λ variant', comp: 'Original, one λ' };
 // Settings held as strings, with their allowed values.
-const CHOICES = { dates: ['native', 'legacy'], eta: ['linear', 'power', 'none'] };
+const CHOICES = { dates: ['native', 'legacy'], eta: ['linear', 'power', 'none'], ramp_shape: ['linear', 'smoothstep'] };
 
 const state = {
   preset: 'daniel-08-16-26',

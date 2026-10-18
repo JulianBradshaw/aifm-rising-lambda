@@ -1,8 +1,30 @@
-# Two-λ AI Futures Model
+# Rising-λ AI Futures Model
 
-A small variant of the public [AI Futures Model](https://github.com/AI-Futures-Project/aifm-public) that uses one parallelization penalty λ for the past and a separate one for the future. The upstream model is preserved unchanged in `upstream/` as a git submodule pinned to commit `1c40ecdb246c25980515441a66571931c5604e11` (MIT license in `upstream/LICENSE`); clone with `git clone --recurse-submodules`. This variant is MIT-licensed (`LICENSE`).
+A small variant of the public [AI Futures Model](https://github.com/AI-Futures-Project/aifm-public) that uses one parallelization penalty λ for the past and a separate one for the future, and lets the forward λ rise over time. It is the [two-λ fixes](https://github.com/JulianBradshaw/aifm-lambda-fixes) plus a λ schedule: with the schedule flat it is exactly the two-λ fixes, and with the forward λ also at the preset's 0.5 it is upstream. The upstream model is preserved unchanged in `upstream/` as a git submodule pinned to commit `1c40ecdb246c25980515441a66571931c5604e11` (MIT license in `upstream/LICENSE`); clone with `git clone --recurse-submodules`. This variant is MIT-licensed (`LICENSE`).
 
-**[Run it in the browser](web/README.md)** · [results for the Daniel preset](outputs/REPORT.md) · [the same change as a patch to upstream](upstream-patch/) · [figures of how λ moves the model's timelines](figures/)
+**[Run it in the browser](web/README.md)** · [design of the λ schedule](DESIGN.md) · [rising-λ results](outputs/RISING.md) · [two-λ results for the Daniel preset](outputs/REPORT.md) · [the same change as a patch to upstream](upstream-patch/) · [figures of how λ moves the model's timelines](figures/)
+
+## λ rising over time
+
+The two-λ fixes below hold the forward λ fixed from today on. The evidence summarised in the forthcoming write-up puts λ at about 0.5 for the teams behind the 2024 calibration and about 0.65 for small AI teams today, so λ may keep rising as coordination improves. Here the forward λ can follow a schedule after today: it starts at `lambda_forward` and moves to `lambda_end` over `ramp_years` from `ramp_start`, along a straight line or a smoothstep S-curve.
+
+Serial coding labor then grows at the λ in force when the parallel labor grows, d ln(serial) = λ(t) d ln X, so a later rise in λ applies only to growth after it and does not revalue the labor already accumulated. Plugging λ(t) into the fixed-λ formula X0^0.5 (X/X0)^λ would instead reprice all growth since today the moment λ moves. Doing it properly takes one extra solver state; [DESIGN.md](DESIGN.md#λ-rising-over-time) gives the derivation. η is rescaled for today's forward λ (0.5/0.65) and not for the later rise, since the rise is better coordination rather than a change in how much parallel labor compute buys. History and every calibrated quantity are unchanged, and a flat schedule takes the original code path, so it reproduces the two-λ fixes exactly.
+
+Daniel 08/16/26 preset, Coding Uplift anchor, η rescaled linearly:
+
+| Forward λ after today | λ at AC | λ at ASI | AC | ASI | Takeoff, AC to ASI |
+| --- | --- | --- | --- | --- | --- |
+| Fixed 0.5 (the fixes at upstream's λ) | 0.50 | 0.50 | Oct 2027 | Dec 2028 | 13.7 mo |
+| Flat at 0.65 | 0.65 | 0.65 | Oct 2027 | Nov 2028 | 13.3 mo |
+| The 2024–26 trend continued (+0.072 a year), capped at 1 | 0.73 | 0.81 | Sep 2027 | Oct 2028 | 12.6 mo |
+| 0.65 to 1 during 2027 (the earlier swarm repo's ramp: smoothstep from January over 9 months) | 1.00 | 1.00 | Sep 2027 | Sep 2028 | 11.6 mo |
+| Fixed 1 from today, for reference | 1.00 | 1.00 | Sep 2027 | Sep 2028 | 12.7 mo |
+
+![λ schedules and AC to ASI for each](outputs/rising-lambda.png)
+
+A rising λ shortens takeoff by at most about 1.7 months against λ held at 0.65 and moves AC by at most 5 days, because λ only acts on labor growth after today and the trend reaches only about 0.8 by ASI. The fast ramp beats a fixed λ of 1 because η is rescaled for 0.65 rather than 1; with η not rescaled at all the two agree (11.0 months each; see [outputs/RISING.md](outputs/RISING.md)). Regenerate with `python -m two_lambda.rising_sweep` (writes `outputs/RISING.md`, `outputs/rising_lambda.csv` and the figure).
+
+The rest of this README describes the two-λ fixes, which are unchanged.
 
 ## Why two λs
 
@@ -59,11 +81,12 @@ The patched model agrees with this package to within a week on AC and ASI dates 
 Python 3.14 is recommended, matching upstream:
 
 ```sh
-git clone --recurse-submodules https://github.com/JulianBradshaw/aifm-lambda-fixes
-cd aifm-lambda-fixes
+git clone --recurse-submodules https://github.com/JulianBradshaw/aifm-rising-lambda
+cd aifm-rising-lambda
 python -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m two_lambda      # writes outputs/REPORT.md and outputs/results.csv
+.venv/bin/python -m two_lambda.rising_sweep    # writes outputs/RISING.md, rising_lambda.csv and the figure (needs matplotlib)
 .venv/bin/python -m pytest
 ```
 
@@ -73,6 +96,8 @@ On Windows, use `.venv\Scripts\python.exe`.
 from two_lambda.model import Variant, simulate, upstream_single_lambda
 
 result = simulate(Variant(lambda_forward=1.0))  # eta_rescale='linear' by default
+rising = simulate(Variant(lambda_forward=0.65, lambda_end=1.0, ramp_start=2027.0, ramp_years=0.75,
+                          ramp_shape='smoothstep'))  # λ 0.65 today, 1 by October 2027
 print(result['milestones'], result['takeoff_months'])
 print(upstream_single_lambda(1.0)['takeoff_months'])  # the unmodified model at λ 1
 ```
@@ -81,10 +106,12 @@ print(upstream_single_lambda(1.0)['takeoff_months'])  # the unmodified model at 
 
 ## Files
 
-- `two_lambda/model.py`: calibration, the forward coding labor, milestones.
+- `DESIGN.md`: the λ schedule and its extra solver state.
+- `two_lambda/model.py`: calibration, the forward coding labor and its λ schedule, milestones.
+- `two_lambda/rising_sweep.py`: the λ schedules and figure.
 - `two_lambda/presets.py`: reads the pinned presets from `upstream/constants/parameters.ts`.
 - `two_lambda/__main__.py`: the comparison report.
 - `upstream-patch/`: the same change as diffs against `upstream/progress_model`.
-- `tests/`: reproduction of upstream at λ 0.5, pinned calibration, the patch, and the browser entry point.
+- `tests/`: reproduction of upstream at λ 0.5, pinned calibration, the λ schedule (flat is unchanged; a rise applies only to later growth), the patch, and the browser entry point.
 - `web/`: the browser page.
 - `figures/`: scripts and data for the λ charts, for the unmodified model and the two-λ variant (`python figures/make.py`).
