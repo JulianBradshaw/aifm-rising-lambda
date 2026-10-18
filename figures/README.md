@@ -33,7 +33,7 @@ With no overrides the patched model gives upstream's results exactly. The bar ch
 ## The figures
 
 **`lambda_sweep/`**: the unmodified model with λ varied from 0.3 to 1.
-- `lambda-sweep-dates.png`: AC and ASI dates against λ, Daniel preset, at the native present day and at present day 2025.6. `lambda-sweep-durations.png` shows the same runs as time from today to AC and AC to ASI.
+- `lambda-sweep-dates.png`: AC and ASI dates against λ, Daniel preset, at the preset's own present day. `lambda-sweep-durations.png` shows the same runs as time from today to AC and AC to ASI.
 - `lambda-sweep-dates-presets.png`: the same for the Daniel, Eli and Brendan presets.
 - `lambda-sweep-dates-anchors.png`: 3 presets × 3 AC anchors (Coding Uplift, Time Horizon, Revenue).
 - `lambda-sweep-dates-anchors-low.png`: the same down to λ 0.03, under the model's η adjustment, the linear correction and no adjustment.
