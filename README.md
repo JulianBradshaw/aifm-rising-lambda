@@ -36,7 +36,7 @@ Daniel 08/16/26 preset, Coding Uplift anchor, native present day; single runs at
 | --- | --- | --- | --- | --- |
 | Two-λ, η linear (default) | 13.7 mo | 13.3 mo | 13.0 mo | 12.7 mo |
 | Two-λ, η power | 13.7 mo | 13.3 mo | 12.8 mo | 12.3 mo |
-| Two-λ, η not rescaled | 13.7 mo | 12.3 mo | 11.5 mo | 10.9 mo |
+| Two-λ, η not rescaled | 13.7 mo | 12.3 mo | 11.5 mo | 11.0 mo |
 | Single λ (upstream) | 13.7 mo | 14.5 mo | 15.8 mo | 18.2 mo |
 
 With two λs, higher λ shortens takeoff and brings AC slightly earlier (October to September 2027 at λ 1), instead of delaying AC by eight months. Most of the gap between the η rows is by design: the linear rescale holds η's serial rate fixed, so the forward λ adds nothing to the part of labor growth that comes from η. Whether that is right depends on how much of η's evidence measured faster serial work rather than cheaper copies; the "not rescaled" row is the other bound. The other anchors and presets are in [outputs/REPORT.md](outputs/REPORT.md); regenerate with `python -m two_lambda`.

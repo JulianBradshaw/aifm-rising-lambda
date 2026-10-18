@@ -146,10 +146,14 @@ class ForwardLabor:
         progress_from_index = self.base.get_progress_from_index
         self.forward.get_progress_from_index = lambda index: self.stretch(progress_from_index(index), progress0)
         self.params = copy.copy(params)
-        # The serial cap M means serial labor / human serial labor <= M; with the forward mapping
-        # that is X/H <= n0 * (M / n0^lambda_cal)^(1/lambda_forward), with n0 = X0/H at t0.
+        # The serial cap M means serial labor / human serial labor <= M, that is
+        # (returned X / H)^lambda_cal <= M. Upstream builds it into the frontier as X/H <= M^(1/lambda_cal).
+        # The forward frontier gets the cap that matches at t0, n0 * (M / n0^lambda_cal)^(1/lambda_forward)
+        # with n0 = X0/H0, and since that drifts as H grows, the returned labor is also capped exactly.
         n0 = self.x0 / human0
         cap = params.max_serial_coding_labor_multiplier
+        # At lambda_forward == lambda_cal the frontier cap is upstream's own and does not drift.
+        self.max_parallel_per_human = None if cap is None or self.exponent == 1 else cap**(1/self.lambda_cal)
         if cap is not None:
             self.params.optimal_ces_frontier_cap = float(np.clip(
                 n0 * (cap / n0**self.lambda_cal)**(1/variant.lambda_forward), *cfg.PARAMETER_BOUNDS['optimal_ces_frontier_cap']))
@@ -164,7 +168,8 @@ class ForwardLabor:
         x = self.forward.coding_labor_optimal_ces(H, C, self.stretch(logE, self.ln0), self.params)
         if x is None or not np.all(np.isfinite(x)):
             raise FloatingPointError('Forward coding labor failed')
-        return self.x0 * (x / self.xf0)**self.exponent
+        x = self.x0 * (x / self.xf0)**self.exponent
+        return x if self.max_parallel_per_human is None else np.minimum(x, H * self.max_parallel_per_human)
 
     def __getattr__(self, name):
         return getattr(self.base, name)
@@ -203,7 +208,7 @@ def simulate(variant=None, anchor='uplift-solved', end=2040.0, max_step=1/24, *,
     rs0 = float(model.results['research_stock'][0])
     eta = eta_input(model)
     unchanged = not force_ode and variant.lambda_forward == p.parallel_penalty and variant.eta_factor(eta, p.parallel_penalty) == 1
-    status, solved_until, forward = 'complete', end, None
+    status, solved_until, forward, segments = 'complete', end, None, []
     if unchanged:
         full_times = np.asarray(model.results['times'])
         keep = full_times <= end
@@ -231,6 +236,7 @@ def simulate(variant=None, anchor='uplift-solved', end=2040.0, max_step=1/24, *,
                             max_step=max_step, dense_output=True, events=ceiling_event)
             if not sol.success:
                 raise RuntimeError(sol.message)
+            segments.append((a, float(sol.t[-1]), sol.sol))
             mask = (times >= a) & (times <= sol.t[-1])
             raw[mask], stock[mask] = sol.sol(times[mask])
             state = sol.y[:,-1].copy()
@@ -243,6 +249,23 @@ def simulate(variant=None, anchor='uplift-solved', end=2040.0, max_step=1/24, *,
                 times, raw, stock = np.insert(times, at, extra), np.insert(raw, at, values[0]), np.insert(stock, at, values[1])
                 break
     milestones = {k: crossing(times, raw, v) for k, v in targets.items()}
+    def progress_at(t):
+        """log10_E at t from the solver's dense output."""
+        for a, b, dense in segments:
+            if a <= t <= b:
+                return dense(t)[0]
+        return np.interp(t, times, raw)
+    if segments:
+        # Grid crossings only bracket each milestone; locate it on the continuous solution, since
+        # during a fast takeoff the state can move by orders of magnitude between grid points.
+        for k, target in targets.items():
+            m = milestones[k]
+            if m is None or m <= times[0]:
+                continue
+            j = int(np.searchsorted(times, m))
+            lo, hi = times[max(j-1, 0)], times[min(j, len(times)-1)]
+            if lo < hi and progress_at(lo) < target <= progress_at(hi):
+                milestones[k] = float(brentq(lambda t: progress_at(t) - target, lo, hi, xtol=1e-10))
     if calibration_snapshot(model) != before:
         raise AssertionError('Calibration was mutated during simulation')
     progress0 = float(np.interp(t0, times, raw))

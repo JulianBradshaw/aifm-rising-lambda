@@ -80,3 +80,15 @@ def test_invalid_settings():
         Variant(0)
     with pytest.raises(ValueError):
         Variant(1, 'quadratic')
+
+
+def test_serial_cap_holds_as_human_labor_grows():
+    model = calibrate()
+    p, t0 = model.params, model.params.present_day
+    progress0 = float(np.interp(t0, model.results['times'], model.results['progress']))
+    labor = forward_params(model, Variant(1.0), t0, progress0).automation_model
+    for t in (t0, 2028.0, 2030.0):
+        h, c = interpolate(model.data, 'L_HUMAN', t), interpolate(model.data, 'inference_H100e', t)
+        x = labor.coding_labor_optimal_ces(h, c, math.log(10)*80, p)
+        assert (x / h)**p.parallel_penalty <= p.max_serial_coding_labor_multiplier * (1 + 1e-9)
+
