@@ -50,7 +50,7 @@ With no overrides the patched model gives upstream's results exactly. The bar ch
 - `lambda-uses-takeoff-{0.65,1}.png` and `lambda-uses-asi-{0.65,1}.png`: per-use shifts in takeoff length and in the ASI date.
 - `lambda-uses-takeoff-{0.65,1}-eta-split.png`: the same, with η's boost from higher λ and the η adjustment shown as separate bars. `-eta-net` shows them netted.
 - `lambda-takeoff-asymptote.png`, `lambda-benefit-vs-asymptote.png`, `lambda-asymptote-takeoff-pct.png`, `lambda-asymptote-takeoff-bars.png`: the direct benefit of higher λ on takeoff at Infinite Coding Labor Asymptotes from 3× to effectively unbounded.
-- `lambda-r-software.png`: r_software refit against λ, and what the refit does to takeoff.
+- `lambda-r-software.png` and `lambda-beta-software.png`: the r_software (= 1/β) refit against λ, shown as r and as β, and what the refit does to takeoff.
 - `lambda-eta-adjustment.png`: takeoff against λ under the three η adjustments.
 
 **`eta_issue/`**

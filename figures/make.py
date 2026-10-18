@@ -29,7 +29,7 @@ GROUPS = {
          'plot_eta_net.py takeoff 0.65', 'plot_eta_net.py takeoff 1',
          'plot_eta_split.py takeoff 0.65', 'plot_eta_split.py takeoff 1',
          'plot_asymptote.py', 'plot_asym_benefit.py', 'plot_asym_pct.py', 'plot_asym_bars.py',
-         'plot_eta.py', 'plot_r.py']),
+         'plot_eta.py', 'plot_r.py', 'plot_beta.py']),
     'eta_issue': ([], ['plot.py']),
     # Uses this repository's two-λ variant; draws the original model's lines from lambda_sweep's data.
     'two_lambda_anchors': (['sweep_anchors_two_lambda.py'], ['plot_anchors_two_lambda.py']),
