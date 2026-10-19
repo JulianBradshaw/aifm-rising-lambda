@@ -19,9 +19,9 @@ lambda_forward equal to the preset's λ, the result is the upstream trajectory i
 Milestones are dated where log10 effective compute crosses each threshold.
 
 An optional λ schedule lets the forward λ rise after t0, from lambda_forward to lambda_end over
-a ramp. Serial labor then grows as d ln(serial) = λ(t) d ln X, which needs one extra solver
-state (see ForwardLabor). With lambda_end unset or equal to lambda_forward the run is the
-fixed forward λ above. See DESIGN.md.
+a ramp. λ(t) takes the place of lambda_forward in the formula above, so a rise applies to all
+coding labor growth since t0, the agents already running included. With lambda_end unset or
+equal to lambda_forward the run is the fixed forward λ above. See DESIGN.md.
 """
 import copy
 from dataclasses import dataclass, asdict
@@ -142,15 +142,6 @@ class Variant:
         q = x if self.ramp_shape == 'linear' else x*x*(3 - 2*x)
         return self.lambda_forward + (self.lambda_end - self.lambda_forward) * q
 
-    def lambda_rate(self, t, t0):
-        """dλ/dt at time t."""
-        start, stop = self.ramp_window(t0)
-        if not self.rising or not start < t < stop:
-            return 0.0
-        x = (t - start) / self.ramp_years
-        dq = 1.0 if self.ramp_shape == 'linear' else 6*x*(1 - x)
-        return (self.lambda_end - self.lambda_forward) * dq / self.ramp_years
-
     def eta_factor(self, eta, lambda_cal):
         """Forward η divided by calibrated η; eta is the input value in OOMs per progress-year."""
         ratio = lambda_cal / self.lambda_forward
@@ -184,17 +175,14 @@ class ForwardLabor:
     above t0's progress by eta_factor, which leaves which tasks are automated unchanged and
     multiplies every task's efficiency growth after t0 by the same factor.
 
-    With a λ schedule, serial labor grows as d ln(serial) = λ(t) d ln X. Integrating by parts,
-    ln(serial / norm) = lambda_cal ln X0 + λ(t) ln(X/X0) - W, with W = ∫ λ'(τ) ln(X/X0) dτ from
-    t0, so only W needs a solver state and no derivative of X is needed. at(t, W) sets the λ
-    and W for the next call; log_growth holds the ln(X/X0) it used, for W's derivative.
-    Changing λ directly in X0 (X/X0)^(λ/lambda_cal) would instead reprice all labor growth since
-    t0 whenever λ moves.
+    With a λ schedule, λ(t) replaces lambda_forward: X0 (X/X0)^(λ(t)/lambda_cal), so better
+    coordination raises the serial value of all labor growth since t0, not only of growth after
+    the rise. at(lam) sets the λ for the next call.
     """
     def __init__(self, params, variant, eta, progress0, human0, inference0):
         self.base, self.lambda_cal = params.automation_model, params.parallel_penalty
         self.exponent = variant.lambda_forward / self.lambda_cal
-        self.rising, self.lam, self.w, self.log_growth = variant.rising, variant.lambda_forward, 0.0, 0.0
+        self.rising, self.lam = variant.rising, variant.lambda_forward
         self.k = variant.eta_factor(eta, self.lambda_cal)
         self.ln0 = math.log(cfg.BASE_FOR_SOFTWARE_LOM) * progress0
         self.x0 = self.base.coding_labor_optimal_ces(human0, inference0, self.ln0, params)
@@ -220,8 +208,8 @@ class ForwardLabor:
         if not all(np.isfinite([self.x0, self.xf0])) or min(self.x0, self.xf0) <= 0:
             raise FloatingPointError('Invalid coding labor at the calibration date')
 
-    def at(self, lam, w):
-        self.lam, self.w = lam, w
+    def at(self, lam):
+        self.lam = lam
         return self
 
     def stretch(self, x, x0):
@@ -231,11 +219,7 @@ class ForwardLabor:
         x = self.forward.coding_labor_optimal_ces(H, C, self.stretch(logE, self.ln0), self.params)
         if x is None or not np.all(np.isfinite(x)):
             raise FloatingPointError('Forward coding labor failed')
-        if self.rising:
-            self.log_growth = np.log(x / self.xf0)
-            x = self.x0 * np.exp((self.lam * self.log_growth - self.w) / self.lambda_cal)
-        else:
-            x = self.x0 * (x / self.xf0)**self.exponent
+        x = self.x0 * (x / self.xf0)**(self.lam / self.lambda_cal if self.rising else self.exponent)
         return x if self.max_parallel_per_human is None else np.minimum(x, H * self.max_parallel_per_human)
 
     def __getattr__(self, name):
@@ -303,24 +287,20 @@ def simulate(variant=None, anchor='uplift-solved', end=2040.0, max_step=1/24, *,
         for a, b in zip(bounds[:-1], bounds[1:]):
             if a == t0:
                 forward = forward_params(model, variant, t0, float(state[0]))
-                if variant.rising:
-                    state = [*state, 0.0]  # W, see ForwardLabor
             params = p if forward is None else forward
             if forward is None or not variant.rising:
                 rhs = lambda t, y: progress_rate_at_time(t, y, data, params, RS_0=rs0)
             else:
                 def rhs(t, y, params=params):
-                    labor = params.automation_model.at(variant.lambda_at(t, t0), y[2])
-                    labor.log_growth = 0.0
-                    rate = progress_rate_at_time(t, y[:2], data, params, RS_0=rs0)
-                    return [*rate, variant.lambda_rate(t, t0) * float(labor.log_growth)]
+                    params.automation_model.at(variant.lambda_at(t, t0))
+                    return progress_rate_at_time(t, y, data, params, RS_0=rs0)
             sol = solve_ivp(rhs, [a, b], state, method='Radau', rtol=1e-6, atol=1e-8,
                             max_step=max_step, dense_output=True, events=ceiling_event)
             if not sol.success:
                 raise RuntimeError(sol.message)
             segments.append((a, float(sol.t[-1]), sol.sol))
             mask = (times >= a) & (times <= sol.t[-1])
-            raw[mask], stock[mask] = sol.sol(times[mask])[:2]
+            raw[mask], stock[mask] = sol.sol(times[mask])
             state = sol.y[:,-1].copy()
             if sol.status == 1:
                 status, solved_until = 'capability_ceiling', float(sol.t[-1])

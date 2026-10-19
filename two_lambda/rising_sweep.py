@@ -142,8 +142,8 @@ def main():
     none = [r for r in rows if r['eta_rescale'] == 'none']
     lines = [f'# λ rising over time ({args.preset}, {args.anchor} anchor)', '',
         f'History and calibration keep λ 0.5. From the calibration date ({t0:.2f}) the forward λ starts at 0.65 and '
-        'follows each schedule; serial coding labor grows as λ(t) times the growth of parallel labor, so a later rise '
-        'applies only to growth after it. η is rescaled for today\'s λ (0.5/0.65) and not for the later rise. '
+        'follows each schedule; serial coding labor is X0^0.5 (X/X0)^λ(t), so a rise applies to all parallel labor growth '
+        'since today, the agents already running included. η is rescaled for today\'s λ (0.5/0.65) and not for the later rise. '
         'Takeoff is AC to ASI; deterministic single runs at preset medians, not forecasts. '
         'Regenerate with `python -m two_lambda.rising_sweep`.', '', *table(linear), '',
         'With η not rescaled at all (the other bound used in the two-λ results):', '', *table(none), '',

@@ -8,7 +8,7 @@ A small variant of the public [AI Futures Model](https://github.com/AI-Futures-P
 
 The two-λ fixes below hold the forward λ fixed from today on. The evidence summarised in the forthcoming write-up puts λ at about 0.5 for the teams behind the 2024 calibration and about 0.65 for small AI teams today, so λ may keep rising as coordination improves. Here the forward λ can follow a schedule after today: it starts at `lambda_forward` and moves to `lambda_end` over `ramp_years` from `ramp_start`, along a straight line or a smoothstep S-curve.
 
-Serial coding labor then grows at the λ in force when the parallel labor grows, d ln(serial) = λ(t) d ln X, so a later rise in λ applies only to growth after it and does not revalue the labor already accumulated. Plugging λ(t) into the fixed-λ formula X0^0.5 (X/X0)^λ would instead reprice all growth since today the moment λ moves. Doing it properly takes one extra solver state; [DESIGN.md](DESIGN.md#λ-rising-over-time) gives the derivation. η is rescaled for today's forward λ (0.5/0.65) and not for the later rise, since the rise is better coordination rather than a change in how much parallel labor compute buys. History and every calibrated quantity are unchanged, and a flat schedule takes the original code path, so it reproduces the two-λ fixes exactly.
+λ(t) then takes the place of the forward λ in the fixed-λ formula, X0^0.5 (X/X0)^λ(t), so a rise applies to all coding labor growth since today: better coordination also helps the agents already running, not only those added after the rise. With a gradual ramp serial labor changes gradually too; [DESIGN.md](DESIGN.md#λ-rising-over-time) has the details and the alternative of applying each λ only to labor added while it is in force. η is rescaled for today's forward λ (0.5/0.65) and not for the later rise, since the rise is better coordination rather than a change in how much parallel labor compute buys. History and every calibrated quantity are unchanged, and a flat schedule takes the original code path, so it reproduces the two-λ fixes exactly.
 
 Daniel 08/16/26 preset, Coding Uplift anchor, η rescaled linearly:
 
@@ -16,13 +16,13 @@ Daniel 08/16/26 preset, Coding Uplift anchor, η rescaled linearly:
 | --- | --- | --- | --- | --- | --- |
 | Fixed 0.5 (the fixes at upstream's λ) | 0.50 | 0.50 | Oct 2027 | Dec 2028 | 13.7 mo |
 | Flat at 0.65 | 0.65 | 0.65 | Oct 2027 | Nov 2028 | 13.3 mo |
-| The 2024–26 trend continued (+0.072 a year), capped at 1 | 0.73 | 0.81 | Sep 2027 | Oct 2028 | 12.6 mo |
-| 0.65 to 1 during 2027 (the earlier swarm repo's ramp: smoothstep from January over 9 months) | 1.00 | 1.00 | Sep 2027 | Sep 2028 | 11.6 mo |
+| The 2024–26 trend continued (+0.072 a year), capped at 1 | 0.73 | 0.81 | Sep 2027 | Oct 2028 | 12.4 mo |
+| 0.65 to 1 during 2027 (the earlier swarm repo's ramp: smoothstep from January over 9 months) | 1.00 | 1.00 | Sep 2027 | Aug 2028 | 11.2 mo |
 | Fixed 1 from today, for reference | 1.00 | 1.00 | Sep 2027 | Sep 2028 | 12.7 mo |
 
 ![λ schedules and AC to ASI for each](outputs/rising-lambda.png)
 
-A rising λ shortens takeoff by at most about 1.7 months against λ held at 0.65 and moves AC by at most 5 days, because λ only acts on labor growth after today and the trend reaches only about 0.8 by ASI. The fast ramp beats a fixed λ of 1 because η is rescaled for 0.65 rather than 1; with η not rescaled at all the two agree (11.0 months each; see [outputs/RISING.md](outputs/RISING.md)). Regenerate with `python -m two_lambda.rising_sweep` (writes `outputs/RISING.md`, `outputs/rising_lambda.csv` and the figure).
+A rising λ shortens takeoff by at most about 2.1 months against λ held at 0.65 and moves AC by at most 2 weeks, because λ only acts on labor growth after today and the trend reaches only about 0.8 by ASI. With η rescaled linearly the fast ramp reaches ASI about 5 weeks before a fixed λ of 1, because its η is rescaled for 0.65 rather than 1. With η not rescaled its ASI is about a week later than a fixed λ of 1, but its takeoff is still slightly shorter (10.7 against 11.0 months) because it reaches AC about two weeks later; see [outputs/RISING.md](outputs/RISING.md). Regenerate with `python -m two_lambda.rising_sweep` (writes `outputs/RISING.md`, `outputs/rising_lambda.csv` and the figure).
 
 The rest of this README describes the two-λ fixes, which are unchanged.
 
@@ -112,6 +112,6 @@ print(upstream_single_lambda(1.0)['takeoff_months'])  # the unmodified model at 
 - `two_lambda/presets.py`: reads the pinned presets from `upstream/constants/parameters.ts`.
 - `two_lambda/__main__.py`: the comparison report.
 - `upstream-patch/`: the same change as diffs against `upstream/progress_model`.
-- `tests/`: reproduction of upstream at λ 0.5, pinned calibration, the λ schedule (flat is unchanged; a rise applies only to later growth), the patch, and the browser entry point.
+- `tests/`: reproduction of upstream at λ 0.5, pinned calibration, the λ schedule (flat is unchanged; a rise applies to all growth since today), the patch, and the browser entry point.
 - `web/`: the browser page.
 - `figures/`: scripts and data for the λ charts, for the unmodified model and the two-λ variant (`python figures/make.py`).
